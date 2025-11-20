@@ -1,0 +1,8 @@
+{
+  "name": "prompt-master-v4-static",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An application to guarantee high-quality, professional, multi-platform prompts for image and video generation, making complex AI tools accessible to Arabic-speaking creators.",
+  "dependencies": {},
+  "devDependencies": {}
+}

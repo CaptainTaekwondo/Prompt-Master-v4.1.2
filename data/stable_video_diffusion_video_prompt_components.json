@@ -1,0 +1,43 @@
+
+{
+  "workflow": {
+    "type": "simple"
+  },
+  "videoPurpose": {
+    "cinematic_film": "cinematic",
+    "social_media_ad": "advertisement",
+    "short_reel": "short video",
+    "documentary": "documentary style",
+    "animation": "anime"
+  },
+  "videoDuration": {
+    "short": "short",
+    "medium": "medium length",
+    "long": "long"
+  },
+  "videoStyle": {
+    "cinematic": "cinematic",
+    "documentary": "documentary",
+    "vlog": "vlog",
+    "epic_fantasy": "epic fantasy"
+  },
+  "videoLighting": {
+    "cinematic_lighting": "cinematic light",
+    "natural_light": "natural light",
+    "golden_hour": "golden hour"
+  },
+  "cameraShot": {
+    "wide_shot": "wide shot",
+    "close_up": "close up",
+    "tracking_shot": "tracking shot",
+    "drone_shot": "drone shot"
+  },
+  "quality": {
+    "HD": "HD",
+    "FHD": "FHD"
+  },
+  "aspectRatio": {
+    "16:9": "16:9",
+    "9:16": "9:16"
+  }
+}

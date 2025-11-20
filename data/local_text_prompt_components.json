@@ -1,0 +1,120 @@
+{
+  "introduction": {
+    "default": "Your primary task is to write a professional document based on the following core idea: \"{userInput}\". The output must be entirely in {language}."
+  },
+  "identity": {
+    "default": "",
+    "student": "Act as a world-class student. Your responsibility is to author a well-researched and structured academic document suitable for a university-level course.",
+    "professor": "Act as a world-class university professor. Your primary responsibility is to author a comprehensive paper of the highest academic standard, intended for publication.",
+    "storyteller": "Act as a world-class storyteller. Your responsibility is to craft an imaginative and engaging narrative that captivates the intended audience.",
+    "novelist": "Act as a world-class novelist. Your responsibility is to write a chapter of fiction, focusing on deep character development, compelling plot, and rich, descriptive language.",
+    "journalist": "Act as a world-class journalist. Your responsibility is to produce a factual, objective, and well-researched article suitable for a reputable news publication.",
+    "poet": "Act as a world-class poet. Your responsibility is to employ figurative language, rhythm, and imagery to create an expressive and artistic piece of text.",
+    "scientist": "Act as a world-class scientist. Your responsibility is to generate precise, data-driven, and objective content for a formal research publication.",
+    "blogger": "Act as a world-class blogger. Your responsibility is to write in a conversational and engaging tone, creating an article that is both informative and interesting for an online audience.",
+    "screenwriter": "Act as a world-class screenwriter. Your responsibility is to format the text as a professional screenplay, focusing on sharp dialogue and clear scene descriptions.",
+    "employee_reporter": "Act as a world-class professional employee. Your responsibility is to create a formal, concise, and data-driven work report for a business context.",
+    "social_media_scripter": "Act as a world-class content creator. Your responsibility is to write a highly engaging and persuasive script optimized for social media platforms.",
+    "marketer": "Act as a world-class marketer. Your responsibility is to write persuasive and compelling copy designed to promote a product or service and drive a specific action."
+  },
+  "internalPlanningPhase": {
+    "default": "**[INTERNAL PLANNING PHASE]:** Before writing, you MUST first perform the following internal analysis (do not show this in the output): 1. Deconstruct the Request: Identify the core topic, audience, and key constraints. 2. Formulate a Document Outline: Create a detailed, logical structure with main sections and sub-points. 3. Identify Key Terminology: List the essential vocabulary and concepts needed to demonstrate expertise.",
+    "scientific_research": "**[INTERNAL PLANNING PHASE]:** Before writing, you MUST first perform the following internal analysis (do not show this in the output): 1. Deconstruct the core research question and hypothesis. 2. Formulate a document outline with Abstract, Introduction, Methodology, Results, Discussion, and Conclusion. 3. Ensure all claims will be supported by evidence and citations will follow the specified format.",
+    "screenplay": "**[INTERNAL PLANNING PHASE]:** Before writing, you MUST first perform the following internal analysis (do not show this in the output): 1. Visualize the scene, characters, and key actions. 2. Outline the sequence of events and dialogue beats. 3. Ensure the structure adheres to standard screenplay formatting rules."
+  },
+  "criticalReviewPhase": {
+    "default": "**[CRITICAL REVIEW PHASE]:** After drafting the content, you MUST switch your role to a meticulous editor. Scrutinize your draft against every single point in the [QUALITY ASSURANCE CHECKLIST]. If there is even a minor deviation, you MUST rewrite the section to achieve 100% compliance. This review is non-negotiable and mandatory for task success."
+  },
+  "qualityAssuranceChecklist": {
+    "header": "Before generating the final output, you MUST internally verify your response against the following Quality Assurance Checklist. Failure to meet any criterion will result in task failure:",
+    "role": "- [ ] Adherence to Role: Does the text reflect the specified professional persona?",
+    "citation": "- [ ] Citation Accuracy: Are all citations formatted perfectly in {style}?",
+    "length": "- [ ] Length Compliance: Is the output approximately {count} {type} long?",
+    "constraints": "- [ ] Negative Constraints: Has all forbidden content (e.g., conversational filler) been removed?",
+    "language": "- [ ] Language Compliance: Is the entire document written in professional {language}?"
+  },
+  "negativeConstraints": {
+    "default": "CRITICAL: Do not include any commentary, self-reflection, or a repeat of the instructions in your response. Generate ONLY the requested document.",
+    "formal": "CRITICAL: Do not use conversational filler phrases. Avoid first-person pronouns (I, we) unless explicitly appropriate for the format. Do not include any personal opinions or unsubstantiated claims.",
+    "informal": "While informal, maintain a clear and organized structure. Do not use excessive slang or overly casual language that would undermine the core message."
+  },
+  "purpose": {
+    "normal": "",
+    "dramatic_novel": "The document is a chapter for a dramatic novel.",
+    "children_story": "The document is a children's story.",
+    "scientific_research": "The document is a scientific research paper.",
+    "educational_article": "The document is an educational article.",
+    "marketing_content": "The document is marketing content.",
+    "business_proposal": "The document is a business proposal.",
+    "technical_manual": "The document is a technical manual.",
+    "legal_document": "The document is a legal document.",
+    "blog_post": "The document is a blog post.",
+    "book": "The document is a chapter from a book.",
+    "inspiring_text": "The document is an inspiring text.",
+    "press_report": "The document is a press report.",
+    "screenplay": "The document is a screenplay.",
+    "youtube_script": "The document is a YouTube script.",
+    "work_report": "The document is a work report."
+  },
+  "audience": {
+    "general": "The text must be tailored for a general audience, with clear and accessible language.",
+    "experts": "The text must be tailored for an expert audience, using appropriate technical terminology and assuming advanced knowledge.",
+    "students": "The text must be tailored for a student audience, presenting information in a clear, educational manner.",
+    "children": "The text must be tailored for children, using simple language and engaging storytelling.",
+    "business_professionals": "The text must be tailored for business professionals, adopting a formal and concise tone."
+  },
+  "formality": {
+    "formal": "Maintain a formal level of writing, using professional language and avoiding slang or contractions.",
+    "neutral": "Maintain a neutral, balanced level of formality suitable for standard reports and articles.",
+    "informal": "Use an informal, conversational style, which may include direct address to the reader."
+  },
+  "creativeTone": {
+    "moving": "The creative tone should be moving and emotionally resonant.",
+    "sad": "The creative tone should be sad and melancholic.",
+    "witty": "The creative tone should be witty, using clever and intelligent humor.",
+    "inspiring": "The creative tone should be inspiring, uplifting, and motivational.",
+    "charismatic": "The creative tone should be charismatic, confident, and persuasive.",
+    "dramatic": "The creative tone should be dramatic, building tension and emotional stakes.",
+    "mysterious": "The creative tone should be mysterious, creating a sense of suspense and intrigue.",
+    "poetic": "The creative tone should be poetic, using figurative language and rich imagery.",
+    "epic": "The creative tone should be epic, conveying a sense of grand scale and monumental events.",
+    "humorous": "The creative tone should be humorous and lighthearted.",
+    "urgent": "The creative tone should be urgent and compelling."
+  },
+  "writingStyle": {
+    "poetic": "The writing style should be poetic.",
+    "conversational": "The writing style should be conversational and engaging.",
+    "reader_address": "The writing style should directly address the reader (using 'you').",
+    "simple": "The writing style should be simple, using easy-to-understand vocabulary and short sentences.",
+    "professional": "The writing style should be professional, formal, and objective.",
+    "scientific": "The writing style should be scientific, precise, and data-driven.",
+    "narrative": "The writing style should be narrative, telling a story with a clear sequence of events.",
+    "informative": "The writing style should be informative, focusing on conveying facts clearly.",
+    "motivational": "The writing style should be motivational, aiming to inspire action.",
+    "persuasive": "The writing style should be persuasive, aiming to convince the reader of a point of view.",
+    "descriptive": "The writing style should be descriptive, using vivid details to paint a picture for the reader."
+  },
+  "citationStyle": {
+    "none": "",
+    "apa": "You MUST format all citations using APA 7th edition (e.g., 'Smith, J. D. (2020). *Title of work*. Publisher.'). Do not use placeholders and generate a complete reference list at the end.",
+    "mla": "You MUST format all citations using MLA 9th edition (e.g., 'Doe, John. *Title of Work*. Publisher, 2021.'). Do not use placeholders and generate a complete works cited list at the end.",
+    "chicago": "You MUST format all citations using Chicago Manual of Style 17th edition (e.g., 'Lastname, Firstname. *Title of Book*. Publisher City: Publisher, Year.'). Do not use placeholders and generate a complete bibliography at the end.",
+    "harvard": "You MUST format all citations using Harvard style (e.g., '(Smith 2020)'). Do not use placeholders and generate a complete reference list at the end."
+  },
+  "length": {
+    "words": "The final output must be approximately {count} words long.",
+    "pages": "The final output must be approximately {count} pages long, assuming standard formatting."
+  },
+  "formatting": {
+    "base": "The document must be well-structured. Use bold Markdown for all main chapter titles (e.g., `**Chapter 1: Introduction**`) and italic Markdown for subheadings (e.g., `*1.1 Background*`).",
+    "advanced": "Act as a professional graphic designer. In addition to basic structure, automatically create compelling chapter titles if appropriate, and use a clear visual hierarchy for all sections. Use bold Markdown for all main chapter titles (e.g., `**Chapter 1: Introduction**`) and italic Markdown for subheadings (e.g., `*1.1 Background*`)."
+  },
+  "authorAttribution": {
+    "instruction": "The author's credit is \"{attributionText}\". It is crucial that you place this attribution exactly as specified: in the document's {macro}, {horizontal}-aligned.",
+    "repeat": "This attribution must appear on every page of the document.",
+    "default": "The author's credit is \"{attributionText}\". Place this attribution at the very end of the document, on the final page only, aligned to the {horizontal}."
+  },
+  "finalRenderCommand": {
+    "default": "[FINAL RENDER COMMAND]: All planning and review phases are complete. Your final task is to render the approved content. The response MUST begin directly with the first word of the document and contain ONLY the final text. Do not include any titles, headers, comments, or notes about your process."
+  }
+}

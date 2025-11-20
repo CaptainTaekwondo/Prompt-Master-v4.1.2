@@ -1,0 +1,70 @@
+{
+  "identity": {
+    "default": {
+      "base": "Act as a world-class photographer and prompt engineer for the {platform} image generator."
+    }
+  },
+  "qualityAssuranceChecklist": {
+    "header": "You MUST internally verify your final prompt against this checklist:",
+    "style": "- [ ] Style Compliance: Does the prompt accurately reflect a {value} style?",
+    "lighting": "- [ ] Lighting Compliance: Is the lighting described as {value}?",
+    "composition": "- [ ] Composition Compliance: Is the composition a {value}?",
+    "aspectRatio": "- [ ] Aspect Ratio: Is the final output syntax set for an aspect ratio of {value}?",
+    "quality": "- [ ] Quality: Does the prompt include terms to achieve {value} quality?"
+  },
+  "internalPlanningPhase": {
+    "default": "**[INTERNAL PLANNING PHASE]:** Before writing the prompt, you MUST perform this internal analysis (do not show this in the output): 1. Deconstruct the core subject and setting. 2. Identify 3-5 key visual details that enhance the theme. 3. Formulate a cohesive sentence structure that logically combines all elements."
+  },
+  "criticalReviewPhase": {
+    "default": "**[CRITICAL REVIEW PHASE]:** After drafting the prompt, switch roles to a meticulous editor. Scrutinize the draft against every point in the [QUALITY ASSURANCE CHECKLIST]. Rewrite if there are any deviations to ensure 100% compliance."
+  },
+  "finalRenderCommand": {
+    "default": "[FINAL RENDER COMMAND]: Render ONLY the final, single-paragraph prompt. Do not include any headers, commentary, or notes."
+  },
+  "negativePrompts": {
+    "default": {
+      "base": "Negative prompt: ugly, deformed, noisy, blurry, distorted, grainy, text, signature, watermark",
+      "midjourney": "--no text, signature, watermark, username"
+    }
+  },
+  "platformSyntax": {
+    "Midjourney": " --ar {aspectRatio} --v 6.0 --style raw",
+    "DALL-E 3": ", aspect ratio {aspectRatio}",
+    "Stable Diffusion": ", aspect ratio {aspectRatio}",
+    "Leonardo.Ai": ", aspect ratio {aspectRatio}",
+    "Ideogram": " --ar {aspectRatio}"
+  },
+  "imagePurpose": {},
+  "style": {
+    "cinematic": { "base": "cinematic style, epic composition, dramatic lighting" },
+    "photorealistic": { "base": "photorealistic, hyperrealistic, high detail" },
+    "anime": { "base": "vibrant anime style, sharp lines, cel shading" },
+    "fantasy art": { "base": "digital fantasy art, imaginative" },
+    "vaporwave": { "base": "vaporwave aesthetic, neon colors, retro" },
+    "cyberpunk": { "base": "high-tech cyberpunk, futuristic, neon lights" },
+    "watercolor": { "base": "soft watercolor painting style" }
+  },
+  "lighting": {
+    "dramatic lighting": { "base": "dramatic lighting, deep shadows" },
+    "soft light": { "base": "soft diffused light" },
+    "golden hour": { "base": "warm golden hour lighting" },
+    "neon glow": { "base": "vibrant neon glow" },
+    "studio lighting": { "base": "professional studio lighting" }
+  },
+  "composition": {
+    "wide-angle shot": { "base": "dynamic wide-angle shot" },
+    "close-up shot": { "base": "intimate close-up shot" },
+    "portrait": { "base": "professional portrait composition" },
+    "landscape": { "base": "sweeping landscape" }
+  },
+  "cameraAngle": {},
+  "mood": {},
+  "colorPalette": {},
+  "quality": {
+    "HD": { "base": "HD, high detail, sharp focus" },
+    "FHD": { "base": "Full HD, highly detailed, crisp image" },
+    "4K": { "base": "4K resolution, photorealistic details, vivid colors" },
+    "8K": { "base": "cinematic 8K, hyperrealistic, insanely detailed" }
+  },
+  "aspectRatio": {}
+}

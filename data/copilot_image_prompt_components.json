@@ -1,0 +1,43 @@
+
+{
+  "workflow": {
+    "type": "simple"
+  },
+  "style": {
+    "default": "",
+    "cinematic": "cinematic",
+    "photorealistic": "photorealistic",
+    "anime": "anime style",
+    "fantasy art": "fantasy art",
+    "cyberpunk": "cyberpunk style",
+    "watercolor": "watercolor painting"
+  },
+  "lighting": {
+    "default": "",
+    "dramatic lighting": "dramatic lighting",
+    "soft light": "soft light",
+    "golden hour": "golden hour light",
+    "neon glow": "neon glow"
+  },
+  "composition": {
+    "default": "",
+    "wide-angle shot": "wide-angle",
+    "close-up shot": "close-up",
+    "portrait": "portrait",
+    "landscape": "landscape"
+  },
+  "quality": {
+    "default": "",
+    "HD": "HD",
+    "FHD": "high quality",
+    "4K": "4K",
+    "8K": "ultra detailed, 8K"
+  },
+  "aspectRatio": {
+    "16:9": "16:9 aspect ratio",
+    "9:16": "9:16 aspect ratio",
+    "1:1": "1:1 aspect ratio",
+    "4:3": "4:3 aspect ratio",
+    "3:2": "3:2 aspect ratio"
+  }
+}

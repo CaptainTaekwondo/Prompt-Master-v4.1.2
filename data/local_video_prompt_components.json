@@ -1,0 +1,93 @@
+{
+  "identity": {
+    "default": "Act as a world-class cinematographer and expert prompt engineer for the {platform} video generator."
+  },
+  "qualityAssuranceChecklist": {
+    "header": "You MUST internally verify your final prompt against this checklist:",
+    "videoPurpose": "- [ ] Purpose: Does the prompt describe a {value}?",
+    "videoDuration": "- [ ] Duration: Does the prompt specify a {value}?",
+    "style": "- [ ] Style: Is the style described as {value}?",
+    "cameraShot": "- [ ] Camera: Does the prompt include a {value}?",
+    "aspectRatio": "- [ ] Aspect Ratio: Is the syntax set for an aspect ratio of {value}?"
+  },
+  "internalPlanningPhase": {
+    "default": "**[INTERNAL PLANNING PHASE]:** Before writing, analyze: 1. Core subject and action. 2. Key cinematic elements (camera, lighting, mood). 3. A logical sequence of descriptions for a single, continuous shot."
+  },
+  "criticalReviewPhase": {
+    "default": "**[CRITICAL REVIEW PHASE]:** After drafting, act as an editor. Scrutinize the prompt against the [QUALITY ASSURANCE CHECKLIST]. Rewrite to ensure 100% compliance."
+  },
+  "finalRenderCommand": {
+    "default": "[FINAL RENDER COMMAND]: Render ONLY the final, single-paragraph video prompt. No commentary."
+  },
+  "negativePrompts": {
+    "default": "Negative prompt: blurry, distorted, grainy, text, watermark, choppy, flickering",
+    "Sora": "--no text, watermark, username, signature",
+    "Pika": "--no text, watermark"
+  },
+  "platformSyntax": {
+    "Sora": ", aspect ratio {aspectRatio}",
+    "Pika": " -ar {aspectRatio}",
+    "Runway ML": ", aspect ratio {aspectRatio}",
+    "Veo": ", aspect ratio {aspectRatio}"
+  },
+  "videoPurpose": {
+    "cinematic_film": "a cinematic film scene",
+    "social_media_ad": "a short, engaging social media ad",
+    "short_reel": "a fast-paced short reel",
+    "documentary": "a realistic documentary-style shot",
+    "animation": "an animated sequence",
+    "music_video": "a stylish music video",
+    "explainer_video": "a clean explainer video",
+    "product_visualization": "a product visualization video",
+    "ugc_style_ad": "a user-generated content style ad",
+    "viral_meme_video": "a viral meme style video"
+  },
+  "videoDuration": {
+    "short": "a 5 second video",
+    "medium": "a 15 second video",
+    "long": "a 30 second video",
+    "one_minute": "a one minute video",
+    "two_minutes": "a two minute video",
+    "extended": "an extended video clip over two minutes long"
+  },
+  "videoStyle": {
+    "cinematic": "in a cinematic style",
+    "documentary": "in a documentary style",
+    "vlog": "in a vlog style",
+    "vintage_8mm": "in a vintage 8mm film style",
+    "epic_fantasy": "in an epic fantasy style"
+  },
+  "videoLighting": {
+    "cinematic_lighting": "with cinematic lighting",
+    "natural_light": "with natural light",
+    "golden_hour": "during the golden hour",
+    "neon_noir": "with neon noir lighting"
+  },
+  "cameraShot": {
+    "wide_shot": "a wide shot",
+    "medium_shot": "a medium shot",
+    "close_up": "a close-up",
+    "tracking_shot": "a smooth tracking shot",
+    "drone_shot": "an aerial drone shot",
+    "slow_motion": "in slow motion"
+  },
+  "fashionEra": {
+    "modern": "featuring modern fashion",
+    "futuristic": "featuring futuristic fashion",
+    "1980s_neon": "featuring 1980s neon fashion",
+    "cyberpunk": "featuring cyberpunk fashion"
+  },
+  "videoEffect": {
+    "film_grain": "with a film grain effect",
+    "lens_flare": "with a lens flare effect",
+    "glitch_effect": "with a glitch effect",
+    "fast_cuts": "with fast cuts"
+  },
+  "quality": {
+    "HD": "HD, high detail",
+    "FHD": "Full HD, highly detailed",
+    "4K": "4K resolution, photorealistic",
+    "8K": "cinematic 8K, hyperrealistic"
+  },
+  "aspectRatio": {}
+}
