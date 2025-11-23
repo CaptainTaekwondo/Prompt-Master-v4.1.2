@@ -264,6 +264,11 @@ export interface TranslationSchema {
     formattingQuality: string;
     pageSettings: string;
     authorInfo: string;
+    
+    // Video Singular Keys (Critical for General Tooltips)
+    videoStyle: string;
+    videoLighting: string;
+    
     // Specific Option Records
     writingIdentities: Record<string, string>;
     purposes: Record<string, string>;
