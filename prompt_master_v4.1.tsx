@@ -17,6 +17,7 @@ import { PaymentModal } from './components/PaymentModal.tsx';
 import { PaymentOptionsModal } from './components/PaymentOptionsModal.tsx';
 import PrivacyPolicy from './src/pages/PrivacyPolicy.tsx';
 import TermsOfUse from './src/pages/TermsOfUse.tsx';
+import { useAuth } from './src/context/AuthContext.tsx';
 
 
 import { useUserSettings } from './components/hooks/useUserSettings.ts';
@@ -33,8 +34,9 @@ type Page = 'main' | 'favorites' | 'history' | 'subscription' | 'report' | 'imag
 export default function PromptV4_1() {
   const { language, theme, setTheme, toggleLanguage } = useUserSettings();
   const t = translations[language as keyof typeof translations] || translations.en;
+  const { user: currentUser, logout } = useAuth();
 
-  const { currentUser, currentUserData, updateUserData, handleLogin, handleLogout, handlePurchase, deletePrompt, handleWatchAd, handleShareReward } = useUserData();
+  const { currentUserData, updateUserData, deletePrompt, handleWatchAd, handleShareReward, handlePurchase } = useUserData(currentUser);
   
   const {
       isLoginModalOpen, openLoginModal, closeLoginModal,
@@ -238,7 +240,7 @@ export default function PromptV4_1() {
   return (
     <div className="min-h-screen text-slate-800 dark:text-white selection:bg-purple-500 selection:text-white transition-colors duration-300">
       <div className="container mx-auto p-4 md:p-8 max-w-7xl">
-        <Header language={language} toggleLanguage={toggleLanguage} slogan={t.headerSlogan} slogan2={t.headerSlogan2} t={t} theme={theme} setTheme={setTheme} currentUser={currentUser} currentUserData={currentUserData} handleLogout={handleLogout} openLoginModal={openLoginModal} openEarnCoinsModal={openEarnCoinsModal} setPage={setPage} />
+        <Header language={language} toggleLanguage={toggleLanguage} slogan={t.headerSlogan} slogan2={t.headerSlogan2} t={t} theme={theme} setTheme={setTheme} currentUser={currentUser} currentUserData={currentUserData} handleLogout={logout} openLoginModal={openLoginModal} openEarnCoinsModal={openEarnCoinsModal} setPage={setPage} />
         <main>{renderPage()}</main>
         <footer className="text-center text-sm text-white/60 dark:text-white/40 mt-12 pb-4">
           <div className="flex justify-center gap-4 mb-2">
@@ -257,7 +259,7 @@ export default function PromptV4_1() {
             onAnimationComplete={handleAnimationComplete}
         />
       )}
-      {isLoginModalOpen && <Login onClose={closeLoginModal} handleLogin={(method) => { handleLogin(method); closeLoginModal(); }} t={t} />}
+      {isLoginModalOpen && <Login onClose={closeLoginModal} t={t} />}
       {isSaveModalOpen && promptToSave && <SavePromptModal onClose={closeSaveModal} onSave={(name) => handleSavePrompt(promptToSave, name)} t={t} />}
       {isOutOfCoinsModalOpen && <OutOfCoinsModal onClose={closeOutOfCoinsModal} onSubscribe={() => setPage('subscription')} onWatchAd={onWatchAd} t={t} />}
       {isEarnCoinsModalOpen && <EarnCoinsModal onClose={closeEarnCoinsModal} onAdComplete={onAdComplete} onShareForCoins={handleShareForCoins} t={t} userData={currentUserData} onSubscribe={() => { closeEarnCoinsModal(); setPage('subscription'); }} />}
