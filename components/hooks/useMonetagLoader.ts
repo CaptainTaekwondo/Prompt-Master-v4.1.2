@@ -1,42 +1,31 @@
-
 import { useEffect } from 'react';
 import { useIsPremiumUser } from './useIsPremiumUser';
 
-const MONETAG_SCRIPT_URL = 'https://quge5.com/88/tag.min.js';
-const MONETAG_ZONE = '188606';
+const MONETAG_SCRIPT_SRC = 'https://quge5.com/88/tag.min.js';
 
-export const useMonetagLoader = () => {
-  const isPremium = useIsPremiumUser();
+export function useMonetagLoader() {
+    const isPremiumUser = useIsPremiumUser();
 
-  useEffect(() => {
-    const scriptId = 'monetag-script';
-    let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+    useEffect(() => {
+        const scriptId = 'monetag-script';
+        let script = document.getElementById(scriptId) as HTMLScriptElement | null;
 
-    if (isPremium) {
-      if (script) {
-        script.remove();
-      }
-      return;
-    }
+        if (!isPremiumUser) {
+            if (!script) {
+                script = document.createElement('script');
+                script.id = scriptId;
+                script.src = MONETAG_SCRIPT_SRC;
+                script.dataset.zone = '188606';
+                script.async = true;
+                script.dataset.cfasync = 'false';
+                document.body.appendChild(script);
+            }
+        } else {
+            if (script) {
+                script.remove();
+            }
+        }
 
-    if (script) {
-      return;
-    }
-
-    script = document.createElement('script');
-    script.id = scriptId;
-    script.src = MONETAG_SCRIPT_URL;
-    script.dataset.zone = MONETAG_ZONE;
-    script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-
-    document.body.appendChild(script);
-
-    return () => {
-      // Clean up the script when the component unmounts or the user becomes premium
-      if (script && script.parentElement) {
-        script.parentElement.removeChild(script);
-      }
-    };
-  }, [isPremium]);
-};
+        // No cleanup needed on unmount, as we want the script to stay if the user is not premium
+    }, [isPremiumUser]);
+}

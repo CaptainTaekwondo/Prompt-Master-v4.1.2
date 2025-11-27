@@ -74,7 +74,7 @@ export const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack, onPu
         <p className="text-lg text-white/80 mt-4 max-w-2xl mx-auto">{t.subscriptionPageSubtitle}</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 text-center items-center">
+      <div className="grid md:grid-cols-3 gap-12 text-center items-center">
         {plans.map(plan => {
           const planDetails = t.proPlans[plan.tierKey];
           const isSelected = selectedTier === plan.tier;
@@ -86,7 +86,7 @@ export const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack, onPu
               onClick={() => setSelectedTier(plan.tier)}
               className={`plan-card ${plan.cardClass} ${isSelected ? 'selected' : ''} ${isRecommended ? 'plan-card--recommended' : ''}`}
             >
-              {planDetails.bestValue && isRecommended && <div className="most-popular-badge">{planDetails.bestValue}</div>}
+              {plan.tier === 'silver' && <div className="most-popular-badge">الأفضل اختياراً</div>}
               
               <div className="h-16 flex items-center justify-center">
                 <span className={`tier-badge ${badgeClasses[plan.tier]} ${badgeFontClasses[plan.tier]}`}>{tierNames[plan.tier]}</span>
