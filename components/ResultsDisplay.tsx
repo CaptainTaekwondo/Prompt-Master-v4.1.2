@@ -36,13 +36,15 @@ const ResultCard: React.FC<{
 
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(prompt);
+    const siteUrl = 'https://prompt-master-v4-1-2.vercel.app';
+    const copyText = `${prompt}\n\n---\n${t.sharePromptCredit}\n${siteUrl}`;
+    navigator.clipboard.writeText(copyText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
   
   const handleShare = async () => {
-    const siteUrl = window.location.origin;
+    const siteUrl = 'https://prompt-master-v4-1-2.vercel.app';
     const shareText = `${prompt}\n\n---\n${t.sharePromptCredit}\n${siteUrl}`;
     
     if (navigator.share) {
