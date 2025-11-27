@@ -132,9 +132,11 @@ export function useUserData() {
         localStorage.removeItem('promptMasterCurrentUser');
     };
 
-    const handlePurchase = (tier: ProTier, durationDays: number) => {
+    const handlePurchase = (tier: ProTier, durationDays: number, paymentMethod: 'vodafone' | 'paypal') => {
         if (!currentUserData) return;
         
+        console.log(`Processing purchase for tier: ${tier} via ${paymentMethod}`);
+
         let newCoins = currentUserData.coins;
         switch (tier) {
             case 'bronze': newCoins += 7000; break;

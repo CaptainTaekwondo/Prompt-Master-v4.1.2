@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 type Theme = 'light' | 'dark';
-type Language = 'en' | 'ar' | 'fr';
+type Language = 'en' | 'ar';
 
 const LANGUAGE_KEY = 'promptMasterLanguage';
 const THEME_KEY = 'promptMasterTheme';
@@ -11,7 +11,7 @@ export function useUserSettings() {
   const [language, setLanguage] = useState<Language>(() => {
     const storedLang = localStorage.getItem(LANGUAGE_KEY);
     // Validate the stored language to prevent invalid values that could cause a crash.
-    if (storedLang === 'en' || storedLang === 'ar' || storedLang === 'fr') {
+    if (storedLang === 'en' || storedLang === 'ar') {
       return storedLang;
     }
     // Default to 'ar' if the stored value is invalid or missing.
@@ -40,7 +40,7 @@ export function useUserSettings() {
   }, [language]);
 
   const toggleLanguage = () => {
-    const newLang = language === 'en' ? 'ar' : language === 'ar' ? 'fr' : 'en';
+    const newLang = language === 'en' ? 'ar' : 'en';
     setLanguage(newLang);
   };
 

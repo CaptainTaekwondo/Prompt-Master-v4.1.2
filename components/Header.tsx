@@ -7,7 +7,7 @@ type Theme = 'light' | 'dark';
 type Page = 'main' | 'favorites' | 'history' | 'subscription' | 'report' | 'image_report' | 'video_report';
 
 interface HeaderProps {
-  language: 'en' | 'ar' | 'fr';
+  language: 'en' | 'ar';
   toggleLanguage: () => void;
   slogan: string;
   slogan2: string;
@@ -113,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, slogan
           className="bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 rounded-full p-2.5 text-xl font-semibold hover:bg-white/30 dark:hover:bg-white/20 transition-colors"
           title={t.changeLanguage}
         >
-          {language === 'en' ? '🇺🇸' : language === 'ar' ? '🇵🇸' : '🇫🇷'}
+          {language === 'en' ? '🇵🇸' : '🇺🇸'}
         </button>
       </div>
       

@@ -13,6 +13,10 @@ import { EarnCoinsModal } from './components/EarnCoinsModal.tsx';
 import { AdRewardModal } from './components/AdRewardModal.tsx';
 import { PerformanceReport } from './components/PerformanceReport.tsx';
 import { RocketAnimation } from './components/RocketAnimation.tsx';
+import { PaymentModal } from './components/PaymentModal.tsx';
+import { PaymentOptionsModal } from './components/PaymentOptionsModal.tsx';
+import PrivacyPolicy from './src/pages/PrivacyPolicy.tsx';
+import TermsOfUse from './src/pages/TermsOfUse.tsx';
 
 
 import { useUserSettings } from './components/hooks/useUserSettings.ts';
@@ -23,11 +27,10 @@ import { translations } from './translations.ts';
 import type { GeneratedPrompt, ProTier } from './types.ts';
 
 type TranslationKeys = keyof typeof translations['en'];
-type Page = 'main' | 'favorites' | 'history' | 'subscription' | 'report' | 'image_report' | 'video_report';
+type Page = 'main' | 'favorites' | 'history' | 'subscription' | 'report' | 'image_report' | 'video_report' | 'privacy' | 'terms';
 
 export default function PromptV4_1() {
   const { language, theme, setTheme, toggleLanguage } = useUserSettings();
-  // Add a robust fallback to ensure `t` is always defined, preventing crashes from invalid language settings.
   const t = translations[language as keyof typeof translations] || translations.en;
 
   const { currentUser, currentUserData, updateUserData, handleLogin, handleLogout, handlePurchase, deletePrompt, handleWatchAd, handleShareReward } = useUserData();
@@ -38,6 +41,8 @@ export default function PromptV4_1() {
       isOutOfCoinsModalOpen, openOutOfCoinsModal, closeOutOfCoinsModal,
       isEarnCoinsModalOpen, openEarnCoinsModal, closeEarnCoinsModal,
       isAdRewardModalOpen, openAdRewardModal, closeAdRewardModal,
+      isPaymentModalOpen, paymentContext, openPaymentModal, closePaymentModal,
+      isPaymentOptionsModalOpen, subscriptionContext, openPaymentOptionsModal, closePaymentOptionsModal,
   } = useModals();
 
   const [errorKey, setErrorKey] = useState<TranslationKeys | null>(null);
@@ -73,10 +78,25 @@ export default function PromptV4_1() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   
-  const handlePurchaseSuccess = (tier: ProTier, durationDays: number) => {
-      handlePurchase(tier, durationDays);
-      setPage('main');
+  const handlePurchaseRequest = (tier: ProTier, durationDays: number) => {
+    openPaymentOptionsModal({ tier, durationDays });
   };
+
+  const handleSelectPaymentMethod = (paymentMethod: 'vodafone' | 'paypal') => {
+      if (subscriptionContext) {
+          openPaymentModal({ ...subscriptionContext, paymentMethod });
+      }
+      closePaymentOptionsModal();
+  };
+
+  const handleConfirmPayment = () => {
+    if (paymentContext) {
+        handlePurchase(paymentContext.tier, paymentContext.durationDays, paymentContext.paymentMethod);
+        closePaymentModal();
+        setPage('main');
+    }
+  };
+
 
   const handleToggleFavorite = (prompt: GeneratedPrompt) => {
       if (!currentUser) { openLoginModal(); return; }
@@ -166,13 +186,17 @@ export default function PromptV4_1() {
       case 'history':
         return <PromptsPage type="history" prompts={currentUserData?.history || []} onUse={handleUsePrompt} onDelete={deletePrompt} onBack={() => setPage('main')} t={t} />;
       case 'subscription':
-        return <SubscriptionPage onBack={() => setPage('main')} onPurchase={handlePurchaseSuccess} t={t} />;
+        return <SubscriptionPage onBack={() => setPage('main')} onPurchase={handlePurchaseRequest} t={t} />;
       case 'report':
         return <PerformanceReport onBack={() => setPage('main')} t={t} mode="text" />;
       case 'image_report':
         return <PerformanceReport onBack={() => setPage('main')} t={t} mode="image" />;
       case 'video_report':
         return <PerformanceReport onBack={() => setPage('main')} t={t} mode="video" />;
+      case 'privacy':
+        return <PrivacyPolicy />;
+      case 'terms':
+        return <TermsOfUse />;
       case 'main':
       default:
         return (
@@ -214,6 +238,11 @@ export default function PromptV4_1() {
         <Header language={language} toggleLanguage={toggleLanguage} slogan={t.headerSlogan} slogan2={t.headerSlogan2} t={t} theme={theme} setTheme={setTheme} currentUser={currentUser} currentUserData={currentUserData} handleLogout={handleLogout} openLoginModal={openLoginModal} openEarnCoinsModal={openEarnCoinsModal} setPage={setPage} />
         <main>{renderPage()}</main>
         <footer className="text-center text-sm text-white/60 dark:text-white/40 mt-12 pb-4">
+          <div className="flex justify-center gap-4 mb-2">
+            <button onClick={() => setPage('terms')} className="hover:text-white cursor-pointer">{t.termsOfUseLink}</button>
+            <span className="select-none">|</span>
+            <button onClick={() => setPage('privacy')} className="hover:text-white cursor-pointer">{t.privacyPolicyLink}</button>
+          </div>
           <p>{t.footerDevelopedBy}</p>
           <p>{t.footerSlogan}</p>
         </footer>
@@ -230,6 +259,8 @@ export default function PromptV4_1() {
       {isOutOfCoinsModalOpen && <OutOfCoinsModal onClose={closeOutOfCoinsModal} onSubscribe={() => setPage('subscription')} onWatchAd={onWatchAd} t={t} />}
       {isEarnCoinsModalOpen && <EarnCoinsModal onClose={closeEarnCoinsModal} onAdComplete={onAdComplete} onShareForCoins={handleShareForCoins} t={t} userData={currentUserData} onSubscribe={() => { closeEarnCoinsModal(); setPage('subscription'); }} />}
       {isAdRewardModalOpen && <AdRewardModal onClose={closeAdRewardModal} t={t} userName={currentUser?.displayName || 'Guest'} />}
+      {isPaymentModalOpen && <PaymentModal t={t} context={paymentContext} onClose={closePaymentModal} onConfirm={handleConfirmPayment} />}
+      {isPaymentOptionsModalOpen && <PaymentOptionsModal t={t} onClose={closePaymentOptionsModal} onSelectPayment={handleSelectPaymentMethod} />}
     </div>
   );
 }
