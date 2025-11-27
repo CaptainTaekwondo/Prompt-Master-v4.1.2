@@ -23,6 +23,7 @@ import { useUserSettings } from './components/hooks/useUserSettings.ts';
 import { useUserData } from './components/hooks/useUserData.ts';
 import { useModals } from './components/hooks/useModals.ts';
 import { usePromptGeneration } from './components/hooks/usePromptGeneration.ts';
+import { useMonetagLoader } from './components/hooks/useMonetagLoader.ts';
 import { translations } from './translations.ts';
 import type { GeneratedPrompt, ProTier } from './types.ts';
 
@@ -69,6 +70,8 @@ export default function PromptV4_1() {
     updateUserData,
     openOutOfCoinsModal,
   });
+
+  useMonetagLoader();
 
   const [page, setPage] = useState<Page>('main');
   const [isLaunching, setIsLaunching] = useState(false);
