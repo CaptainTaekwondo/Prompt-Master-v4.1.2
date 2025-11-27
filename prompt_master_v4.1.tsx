@@ -152,7 +152,7 @@ export default function PromptV4_1() {
         const shareData = {
             title: 'PROMPT MASTER v4.1',
             text: t.sharePageText,
-            url: window.location.origin,
+            url: 'https://prompt-master-v4-1-2.vercel.app',
         };
         try {
             await navigator.share(shareData);
