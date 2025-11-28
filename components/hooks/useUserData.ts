@@ -7,7 +7,7 @@ import { ensureDailyCoinsForUser } from '../../src/services/coinsService';
 
 const getInitialUserData = (userId: string): UserData => ({
     uid: userId,
-    coins: 100, // Default to 100 in the base object
+    coins: 0, // Base default, will be updated from Firestore
     favorites: [],
     history: [],
     lastCoinRewardDate: '1970-01-01',
@@ -31,20 +31,17 @@ export function useUserData(user: User | null) {
 
         const initializeAndListen = async () => {
             try {
-                // This function ensures the user document exists and daily coins are set.
-                // It prevents a race condition with the snapshot listener.
+                // 1. Ensure the user document and daily coins are correctly set.
+                // This function now contains the full logic to prevent race conditions.
                 await ensureDailyCoinsForUser(user.uid);
 
-                // Now, set up the real-time listener.
+                // 2. After ensuring the data is correct, set up the real-time listener.
                 unsubscribe = onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        // Merge with defaults to ensure a consistent object shape
-                        const data = { ...getInitialUserData(user.uid), ...docSnap.data() };
+                        const data = { ...getInitialUserData(user.uid), ...docSnap.data() } as UserData;
                         setCurrentUserData(data);
                     } else {
-                        // This case should ideally not be reached after the await above.
-                        // If it is, it means the doc was deleted. Reset to a default state.
-                        console.warn("User document not found after initialization. Resetting local data.");
+                        // This case is unlikely after the await above but handled as a fallback.
                         setCurrentUserData(getInitialUserData(user.uid));
                     }
                 }, (error) => {
@@ -59,6 +56,7 @@ export function useUserData(user: User | null) {
 
         initializeAndListen();
 
+        // Cleanup listener on component unmount or user change
         return () => {
             if (unsubscribe) {
                 unsubscribe();
@@ -102,6 +100,7 @@ export function useUserData(user: User | null) {
         const userDocRef = doc(db, 'users', user.uid);
 
         try {
+            // Atomically increment coins and update ad watch count
             await updateDoc(userDocRef, {
                 coins: increment(10),
                 adsWatchedToday: { count: newCount, date: today },
