@@ -1,16 +1,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import type { User } from 'firebase/auth';
-import type { UserData, GeneratedPrompt, ProTier } from '../../types.ts';
+import { useAuth } from '../../src/context/AuthContext';
+import type { UserData, GeneratedPrompt } from '../../types.ts';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from '../../src/lib/firebase';
 
-const USER_DATA_KEY = 'promptMasterUserData';
-
-const getInitialUserData = (): UserData => ({
+const getInitialUserData = (userId: string): UserData => ({
+    uid: userId,
     coins: 100,
     favorites: [],
     history: [],
-    proTier: null,
-    subscriptionEndDate: null,
     lastCoinRewardDate: new Date().toISOString().split('T')[0],
     adsWatchedToday: {
         count: 0,
@@ -22,83 +21,78 @@ const getInitialUserData = (): UserData => ({
     },
 });
 
-export function useUserData(currentUser: User | null) {
+export function useUserData() {
+    const { user, currentPlan } = useAuth();
     const [currentUserData, setCurrentUserData] = useState<UserData | null>(null);
 
+    const getUserData = useCallback(async (userId: string) => {
+        const userDocRef = doc(db, 'users', userId);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as UserData;
+        } else {
+            const initialData = getInitialUserData(userId);
+            await setDoc(userDocRef, initialData);
+            return initialData;
+        }
+    }, []);
+
     useEffect(() => {
-        if (currentUser) {
-            const storedData = localStorage.getItem(`${USER_DATA_KEY}_${currentUser.uid}`);
-            let userData: UserData;
+        if (user) {
+            getUserData(user.uid).then(userData => {
+                const today = new Date().toISOString().split('T')[0];
+                if (userData.lastCoinRewardDate !== today) {
+                    const dailyCoins = 
+                        currentPlan === 'pro' ? 999999 : 
+                        currentPlan === 'plus' ? 5000 : 
+                        1000; // lite or free
 
-            if (storedData) {
-                try {
-                    userData = JSON.parse(storedData) as UserData;
-                } catch (e) {
-                    console.error("Failed to parse user data from localStorage, resetting.", e);
-                    userData = getInitialUserData();
+                    const updatedData: UserData = {
+                        ...userData,
+                        coins: (userData.coins || 0) + dailyCoins,
+                        lastCoinRewardDate: today,
+                        adsWatchedToday: { count: 0, date: today },
+                        sharesToday: { count: 0, date: today },
+                    };
+                    
+                    const userDocRef = doc(db, 'users', user.uid);
+                    updateDoc(userDocRef, updatedData).then(() => {
+                        setCurrentUserData(updatedData);
+                    });
+                } else {
+                    setCurrentUserData(userData);
                 }
-            } else {
-                userData = getInitialUserData();
-            }
-
-            const today = new Date().toISOString().split('T')[0];
-            if (userData.lastCoinRewardDate !== today) {
-                const dailyCoins = userData.proTier === 'gold' ? 10000 : (userData.proTier === 'silver' ? 5000 : (userData.proTier === 'bronze' ? 1000 : 100));
-                
-                const updatedData = {
-                    ...userData,
-                    coins: (userData.coins || 0) + dailyCoins,
-                    lastCoinRewardDate: today,
-                    adsWatchedToday: { count: 0, date: today },
-                    sharesToday: { count: 0, date: today },
-                };
-                localStorage.setItem(`${USER_DATA_KEY}_${currentUser.uid}`, JSON.stringify(updatedData));
-                setCurrentUserData(updatedData);
-            } else {
-                setCurrentUserData(userData);
-            }
+            });
         } else {
             setCurrentUserData(null);
         }
-    }, [currentUser]);
+    }, [user, currentPlan, getUserData]);
 
-    const updateUserData = useCallback((data: Partial<UserData>) => {
-        if (!currentUser) return;
+    const updateUserData = useCallback(async (data: Partial<UserData>) => {
+        if (!user) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        await updateDoc(userDocRef, data);
+        setCurrentUserData(prevData => ({ ...prevData!, ...data }));
+    }, [user]);
 
-        setCurrentUserData(prevData => {
-            const newData = { ...(prevData || getInitialUserData()), ...data };
-            localStorage.setItem(`${USER_DATA_KEY}_${currentUser.uid}`, JSON.stringify(newData));
-            return newData;
-        });
-    }, [currentUser]);
+    const deletePrompt = useCallback(async (promptId: string, type: 'favorites' | 'history') => {
+        if (!user) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        const promptToDelete = currentUserData?.[type].find(p => p.id === promptId);
 
-    const handlePurchase = (tier: ProTier, durationDays: number, paymentMethod: 'vodafone' | 'paypal') => {
-        if (!currentUserData) return;
-        
-        console.log(`Processing purchase for tier: ${tier} via ${paymentMethod}`);
-
-        let newCoins = currentUserData.coins;
-        switch (tier) {
-            case 'bronze': newCoins += 7000; break;
-            case 'silver': newCoins += 35000; break;
-            case 'gold': newCoins += 999999; break;
+        if (promptToDelete) {
+            await updateDoc(userDocRef, {
+                [type]: arrayRemove(promptToDelete)
+            });
+            setCurrentUserData(prevData => ({
+                ...prevData!,
+                [type]: prevData![type].filter(p => p.id !== promptId),
+            }));
         }
+    }, [user, currentUserData]);
 
-        updateUserData({
-            proTier: tier,
-            subscriptionEndDate: Date.now() + durationDays * 24 * 60 * 60 * 1000,
-            coins: newCoins,
-        });
-    };
-
-    const deletePrompt = (promptId: string, type: 'favorites' | 'history') => {
-        if (!currentUserData) return;
-        const updatedList = currentUserData[type].filter(p => p.id !== promptId);
-        updateUserData({ [type]: updatedList });
-    };
-
-    const handleWatchAd = useCallback(() => {
-        if (!currentUserData) return false;
+    const handleWatchAd = useCallback(async () => {
+        if (!currentUserData || !user) return false;
 
         const today = new Date().toISOString().split('T')[0];
         const adsData = currentUserData.adsWatchedToday || { count: 0, date: '1970-01-01' };
@@ -108,16 +102,18 @@ export function useUserData(currentUser: User | null) {
         }
         
         const newCount = adsData.date === today ? adsData.count + 1 : 1;
-        updateUserData({
-            coins: currentUserData.coins + 10,
-            adsWatchedToday: { count: newCount, date: today },
+        const updatedAdsData = { count: newCount, date: today };
+        
+        await updateUserData({
+            coins: (currentUserData.coins || 0) + 10,
+            adsWatchedToday: updatedAdsData,
         });
 
         return true;
-    }, [currentUserData, updateUserData]);
+    }, [currentUserData, user, updateUserData]);
     
-    const handleShareReward = useCallback(() => {
-        if (!currentUserData) return false;
+    const handleShareReward = useCallback(async () => {
+        if (!currentUserData || !user) return false;
 
         const today = new Date().toISOString().split('T')[0];
         const sharesData = currentUserData.sharesToday || { count: 0, date: '1970-01-01' };
@@ -128,18 +124,19 @@ export function useUserData(currentUser: User | null) {
         }
         
         const newCount = sharesData.date === today ? sharesData.count + 1 : 1;
-        updateUserData({
-            coins: currentUserData.coins + 15,
-            sharesToday: { count: newCount, date: today },
+        const updatedSharesData = { count: newCount, date: today };
+        
+        await updateUserData({
+            coins: (currentUserData.coins || 0) + 15,
+            sharesToday: updatedSharesData,
         });
 
         return true;
-    }, [currentUserData, updateUserData]);
+    }, [currentUserData, user, updateUserData]);
 
     return {
         currentUserData,
         updateUserData,
-        handlePurchase,
         deletePrompt,
         handleWatchAd,
         handleShareReward,

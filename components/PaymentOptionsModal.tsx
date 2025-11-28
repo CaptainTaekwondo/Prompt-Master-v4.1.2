@@ -1,6 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import type { translations } from '../translations.ts';
+import { useAuth } from '../src/context/AuthContext';
+import { activateSubscriptionForUser, PlanId } from '../src/services/subscriptionService';
 
 type Translations = typeof translations['en'];
 
@@ -19,6 +21,7 @@ interface PaymentOptionsModalProps {
 }
 
 export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onClose, onSelectPayment, planId, amount }) => {
+    const { user, refreshSubscription } = useAuth();
     const [step, setStep] = useState('choose');
     const [paypalStatus, setPaypalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [paypalError, setPaypalError] = useState<string | null>(null);
@@ -26,7 +29,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
 
     useEffect(() => {
         if (step === 'paypal' && paypalButtonRef.current && window.paypal) {
-            const currentPlanId = planId;
+            const currentPlanId = planId as PlanId;
             const currentAmount = amount;
 
             if (!currentPlanId || !currentAmount || currentAmount === '0.00') {
@@ -59,11 +62,19 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                 },
                 onApprove: async (data: any, _actions: any) => {
                   try {
+                    if (!user) {
+                        setPaypalStatus('error');
+                        setPaypalError("تمت عملية الدفع، ولكن لم نتمكن من ربط الاشتراك بحساب مستخدم. يرجى تسجيل الدخول أولاً ثم المحاولة مرة أخرى.");
+                        return;
+                    }
+
                     console.log('PayPal onApprove data:', data);
-                    // Treat approval as success without calling actions.order.capture()
                     setPaypalStatus('success');
                     setPaypalError(null);
-                    // TODO: later we will use data.orderID to save the subscription in Firestore
+
+                    await activateSubscriptionForUser(user.uid, currentPlanId, data?.orderID);
+                    await refreshSubscription(); // Refresh subscription state in AuthContext
+
                   } catch (err: any) {
                     console.error('PayPal onApprove error:', err);
                     setPaypalStatus('error');
@@ -75,7 +86,6 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                 },
                 onError: (err: any) => {
                   console.error('PayPal onError:', err);
-                  setPaypalStatus('error');
                   const msg =
                     (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
                     JSON.stringify(err);
@@ -95,7 +105,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                 setPaypalError('فشل تحميل زر الدفع. يرجى تحديث الصفحة.');
             });
         }
-    }, [step, planId, amount]);
+    }, [step, planId, amount, user, refreshSubscription]);
 
     const handlePaypalSelect = () => {
         setStep('paypal');

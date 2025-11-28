@@ -1,7 +1,7 @@
 
-import { useUserData } from './useUserData';
+import { useAuth } from '../../src/context/AuthContext';
 
 export function useIsPremiumUser() {
-    const { currentUserData } = useUserData();
-    return currentUserData?.proTier !== null;
+    const { isPremium } = useAuth();
+    return isPremium;
 }
