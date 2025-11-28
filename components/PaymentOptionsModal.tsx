@@ -10,20 +10,15 @@ declare global {
   }
 }
 
-const PLAN_AMOUNTS: Record<string, string> = {
-    bronze: "5.00",
-    silver: "20.00",
-    gold: "50.00",
-};
-
 interface PaymentOptionsModalProps {
     t: Translations;
     onClose: () => void;
     onSelectPayment: (method: 'vodafone') => void;
-    planId: 'bronze' | 'silver' | 'gold';
+    planId: string;
+    amount: string;
 }
 
-export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onClose, onSelectPayment, planId }) => {
+export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onClose, onSelectPayment, planId, amount }) => {
     const [step, setStep] = useState('choose');
     const [paypalStatus, setPaypalStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [paypalError, setPaypalError] = useState<string | null>(null);
@@ -31,36 +26,26 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
 
     useEffect(() => {
         if (step === 'paypal' && paypalButtonRef.current && window.paypal) {
-            let currentPlanId: string | undefined;
-            let currentAmount = '0.00';
+            const currentPlanId = planId;
+            const currentAmount = amount;
 
-            if (planId === 'bronze') {
-                currentPlanId = 'bronze';
-                currentAmount = PLAN_AMOUNTS.bronze;
-            } else if (planId === 'silver') {
-                currentPlanId = 'silver';
-                currentAmount = PLAN_AMOUNTS.silver;
-            } else if (planId === 'gold') {
-                currentPlanId = 'gold';
-                currentAmount = PLAN_AMOUNTS.gold;
-            }
-
-            if (!currentPlanId) {
-                console.error("PayPal createOrder error: planId is missing or invalid.", planId);
+            if (!currentPlanId || !currentAmount || currentAmount === '0.00') {
                 setPaypalStatus('error');
-                setPaypalError("An unexpected error occurred: Plan information is missing.");
+                setPaypalError("لم يتم تمرير معلومات الخطة بشكل صحيح إلى نافذة الدفع. يرجى إغلاق النافذة والمحاولة مرة أخرى من زر الاشتراك.");
                 return;
             }
 
             setPaypalStatus('loading');
             paypalButtonRef.current.innerHTML = '';
 
+            const planLabel = (currentPlanId || 'UNKNOWN').toString().toUpperCase();
+
             window.paypal.Buttons({
                 createOrder: (data: any, actions: any) => {
                     setPaypalStatus('loading');
                     return actions.order.create({
                         purchase_units: [{
-                            description: `Prompt Master - ${currentPlanId.toUpperCase()} plan`,
+                            description: `Prompt Master - ${planLabel} plan`,
                             amount: {
                                 value: currentAmount,
                                 currency_code: 'USD'
@@ -104,11 +89,11 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                 setPaypalError('فشل تحميل زر الدفع. يرجى تحديث الصفحة.');
             });
         }
-    }, [step, planId]);
+    }, [step, planId, amount]);
 
     const handlePaypalSelect = () => {
         setStep('paypal');
-        setPaypalStatus('idle'); // Reset status when entering the step
+        setPaypalStatus('idle'); 
         setPaypalError(null);
     };
 
