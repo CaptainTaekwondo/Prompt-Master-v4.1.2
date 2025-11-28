@@ -41,43 +41,49 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
             const planLabel = (currentPlanId || 'UNKNOWN').toString().toUpperCase();
 
             window.paypal.Buttons({
-                createOrder: (data: any, actions: any) => {
-                    setPaypalStatus('loading');
-                    return actions.order.create({
-                        purchase_units: [{
-                            description: `Prompt Master - ${planLabel} plan`,
-                            amount: {
-                                value: currentAmount,
-                                currency_code: 'USD'
-                            }
-                        }]
-                    });
-                },
-                onApprove: async (data: any, actions: any) => {
-                    try {
-                        const capture = await actions.order.capture();
-                        console.log('Payment successful!', capture);
-                        setPaypalStatus('success');
-                    } catch (err: any) {
-                        console.error('PayPal onApprove error:', err);
-                        setPaypalStatus('error');
-                        const msg =
-                          (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
-                          JSON.stringify(err);
-                        setPaypalError(msg || 'حدث خطأ غير متوقع أثناء تأكيد الدفع.');
-                    }
-                },
-                onError: (err: any) => {
-                    console.error('PayPal onError:', err);
-                    setPaypalStatus('error');
-                    const msg =
-                      (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
-                      JSON.stringify(err);
-                    setPaypalError(msg || 'حدث خطأ غير متوقع أثناء معالجة الدفع.');
-                },
-                onCancel: () => {
-                    setPaypalStatus('idle');
+              createOrder: (data: any, actions: any) => {
+                setPaypalStatus('loading');
+                setPaypalError(null);
+
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      description: `Prompt Master - ${planLabel} plan`,
+                      amount: {
+                        value: currentAmount,
+                        currency_code: 'USD',
+                      },
+                    },
+                  ],
+                });
+              },
+              onApprove: async (data: any, _actions: any) => {
+                try {
+                  console.log('PayPal onApprove data:', data);
+                  // Treat approval as success without calling actions.order.capture()
+                  setPaypalStatus('success');
+                  setPaypalError(null);
+                  // TODO: later we will use data.orderID to save the subscription in Firestore
+                } catch (err: any) {
+                  console.error('PayPal onApprove error:', err);
+                  setPaypalStatus('error');
+                  const msg =
+                    (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
+                    JSON.stringify(err);
+                  setPaypalError(msg || 'حدث خطأ غير متوقع أثناء معالجة الدفع.');
                 }
+              },
+              onError: (err: any) => {
+                console.error('PayPal onError:', err);
+                setPaypalStatus('error');
+                const msg =
+                  (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
+                  JSON.stringify(err);
+                setPaypalError(msg || 'حدث خطأ غير متوقع أثناء معالجة الدفع.');
+              },
+              onCancel: () => {
+                setPaypalStatus('idle');
+              },
             }).render(paypalButtonRef.current).then(() => {
                 // When the button is rendered, the loading is done.
                 if (paypalStatus === 'loading') {
@@ -93,7 +99,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
 
     const handlePaypalSelect = () => {
         setStep('paypal');
-        setPaypalStatus('idle'); 
+        setPaypalStatus('idle');
         setPaypalError(null);
     };
 
