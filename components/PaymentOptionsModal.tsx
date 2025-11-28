@@ -29,10 +29,29 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
     const [paypalError, setPaypalError] = useState<string | null>(null);
     const paypalButtonRef = useRef<HTMLDivElement | null>(null);
 
-    const amount = PLAN_AMOUNTS[planId] || "0.00";
-
     useEffect(() => {
         if (step === 'paypal' && paypalButtonRef.current && window.paypal) {
+            let currentPlanId: string | undefined;
+            let currentAmount = '0.00';
+
+            if (planId === 'bronze') {
+                currentPlanId = 'bronze';
+                currentAmount = PLAN_AMOUNTS.bronze;
+            } else if (planId === 'silver') {
+                currentPlanId = 'silver';
+                currentAmount = PLAN_AMOUNTS.silver;
+            } else if (planId === 'gold') {
+                currentPlanId = 'gold';
+                currentAmount = PLAN_AMOUNTS.gold;
+            }
+
+            if (!currentPlanId) {
+                console.error("PayPal createOrder error: planId is missing or invalid.", planId);
+                setPaypalStatus('error');
+                setPaypalError("An unexpected error occurred: Plan information is missing.");
+                return;
+            }
+
             setPaypalStatus('loading');
             paypalButtonRef.current.innerHTML = '';
 
@@ -41,9 +60,9 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                     setPaypalStatus('loading');
                     return actions.order.create({
                         purchase_units: [{
-                            description: `Prompt Master - ${planId.toUpperCase()} plan`,
+                            description: `Prompt Master - ${currentPlanId.toUpperCase()} plan`,
                             amount: {
-                                value: amount,
+                                value: currentAmount,
                                 currency_code: 'USD'
                             }
                         }]
@@ -85,7 +104,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                 setPaypalError('فشل تحميل زر الدفع. يرجى تحديث الصفحة.');
             });
         }
-    }, [step, planId, amount]);
+    }, [step, planId]);
 
     const handlePaypalSelect = () => {
         setStep('paypal');
