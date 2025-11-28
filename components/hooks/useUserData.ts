@@ -1,14 +1,13 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import type { User } from 'firebase/auth';
-import { doc, setDoc, updateDoc, arrayRemove, onSnapshot, increment } from 'firebase/firestore';
+import { doc, updateDoc, arrayRemove, onSnapshot, increment } from 'firebase/firestore';
 import { db } from '../../src/lib/firebase';
 import type { UserData, GeneratedPrompt, ProTier } from '../../types';
 import { ensureDailyCoinsForUser } from '../../src/services/coinsService';
 
 const getInitialUserData = (userId: string): UserData => ({
     uid: userId,
-    coins: 100,
+    coins: 100, // Default to 100 in the base object
     favorites: [],
     history: [],
     lastCoinRewardDate: '1970-01-01',
@@ -28,27 +27,43 @@ export function useUserData(user: User | null) {
         }
 
         const userDocRef = doc(db, 'users', user.uid);
+        let unsubscribe: (() => void) | null = null;
 
-        // First, ensure the user has daily coins. This also creates the user doc if it doesn't exist.
-        ensureDailyCoinsForUser(user.uid).catch(error => {
-            console.error("Error ensuring daily coins on initial load:", error);
-        });
+        const initializeAndListen = async () => {
+            try {
+                // This function ensures the user document exists and daily coins are set.
+                // It prevents a race condition with the snapshot listener.
+                await ensureDailyCoinsForUser(user.uid);
 
-        // Then, set up a real-time listener for the user data document.
-        const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const userData = { ...getInitialUserData(user.uid), ...docSnap.data() };
-                setCurrentUserData(userData);
-            } else {
-                console.log("User document doesn't exist yet, waiting for creation by ensureDailyCoinsForUser...");
+                // Now, set up the real-time listener.
+                unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        // Merge with defaults to ensure a consistent object shape
+                        const data = { ...getInitialUserData(user.uid), ...docSnap.data() };
+                        setCurrentUserData(data);
+                    } else {
+                        // This case should ideally not be reached after the await above.
+                        // If it is, it means the doc was deleted. Reset to a default state.
+                        console.warn("User document not found after initialization. Resetting local data.");
+                        setCurrentUserData(getInitialUserData(user.uid));
+                    }
+                }, (error) => {
+                    console.error("Error in user data onSnapshot listener:", error);
+                    setCurrentUserData(null);
+                });
+            } catch (error) {
+                console.error("Failed to initialize user data or listener:", error);
+                setCurrentUserData(null);
             }
-        }, (error) => {
-            console.error("Error in user data onSnapshot listener:", error);
-            setCurrentUserData(null);
-        });
+        };
 
-        return () => unsubscribe();
+        initializeAndListen();
 
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
     }, [user]);
 
     const updateUserData = useCallback(async (data: Partial<UserData>) => {
@@ -73,7 +88,8 @@ export function useUserData(user: User | null) {
     }, [user, currentUserData]);
 
     const handleWatchAd = useCallback(async () => {
-        if (!currentUserData || !user) return false;
+        if (!user || !currentUserData) return false;
+
         const today = new Date().toISOString().split('T')[0];
         const adsData = currentUserData.adsWatchedToday || { count: 0, date: '1970-01-01' };
 
@@ -98,7 +114,7 @@ export function useUserData(user: User | null) {
     }, [user, currentUserData]);
     
     const handleShareReward = useCallback(async () => {
-        if (!currentUserData || !user) return false;
+        if (!user || !currentUserData) return false;
         const today = new Date().toISOString().split('T')[0];
         const sharesData = currentUserData.sharesToday || { count: 0, date: '1970-01-01' };
         if (sharesData.date === today && sharesData.count >= 5) return false;
