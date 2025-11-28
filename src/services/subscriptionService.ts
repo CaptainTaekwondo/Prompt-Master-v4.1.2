@@ -2,10 +2,11 @@
 import { db } from '../lib/firebase';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 
-export type PlanId = 'lite' | 'plus' | 'pro';
+export type InternalPlanId = 'lite' | 'plus' | 'pro';
+export type PlanId = InternalPlanId | 'bronze' | 'silver' | 'gold';
 
 export interface UserSubscription {
-  plan: PlanId;
+  plan: InternalPlanId;
   startAt: Timestamp;
   endAt: Timestamp;
   orderId?: string;
@@ -25,7 +26,27 @@ export async function activateSubscriptionForUser(
   const startAt = new Date();
   const endAt = new Date();
 
+  let normalizedPlan: InternalPlanId;
+
   switch (plan) {
+    case 'bronze':
+      normalizedPlan = 'lite';
+      break;
+    case 'silver':
+      normalizedPlan = 'plus';
+      break;
+    case 'gold':
+      normalizedPlan = 'pro';
+      break;
+    case 'lite':
+    case 'plus':
+    case 'pro':
+    default:
+      normalizedPlan = plan as InternalPlanId;
+      break;
+  }
+
+  switch (normalizedPlan) {
     case 'lite':
       endAt.setDate(startAt.getDate() + 7);
       break;
@@ -38,7 +59,7 @@ export async function activateSubscriptionForUser(
   }
 
   const subscription: UserSubscription = {
-    plan,
+    plan: normalizedPlan,
     startAt: Timestamp.fromDate(startAt),
     endAt: Timestamp.fromDate(endAt),
     orderId,
