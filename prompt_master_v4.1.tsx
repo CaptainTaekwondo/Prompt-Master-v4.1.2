@@ -36,7 +36,7 @@ export default function PromptV4_1() {
   const t = translations[language as keyof typeof translations] || translations.en;
   const { user: currentUser, logout } = useAuth();
 
-  const { currentUserData, updateUserData, deletePrompt, handleWatchAd, handleShareReward, handlePurchase } = useUserData();
+  const { currentUserData, updateUserData, deletePrompt, handleWatchAd, handleShareReward, handlePurchase } = useUserData(currentUser);
   
   const {
       isLoginModalOpen, openLoginModal, closeLoginModal,
@@ -278,7 +278,7 @@ export default function PromptV4_1() {
       {isOutOfCoinsModalOpen && <OutOfCoinsModal onClose={closeOutOfCoinsModal} onSubscribe={() => setPage('subscription')} onWatchAd={onWatchAd} t={t} />}
       {isEarnCoinsModalOpen && <EarnCoinsModal onClose={closeEarnCoinsModal} onAdComplete={onAdComplete} onShareForCoins={handleShareForCoins} t={t} userData={currentUserData} onSubscribe={() => { closeEarnCoinsModal(); setPage('subscription'); }} />}
       {isAdRewardModalOpen && <AdRewardModal onClose={closeAdRewardModal} t={t} userName={currentUser?.displayName || 'Guest'} />}
-      {isPaymentModalOpen && <PaymentModal t={t} context={paymentContext} onClose={closePaymentModal} onConfirm={handleConfirmPayment} />}
+      {isPaymentModalOpen && paymentContext && <PaymentModal t={t} context={paymentContext} onClose={closePaymentModal} onConfirm={handleConfirmPayment} />}
       {isPaymentOptionsModalOpen && subscriptionContext && (
         <PaymentOptionsModal
           t={t}

@@ -1,115 +1,87 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../src/context/AuthContext';
-import type { UserData, GeneratedPrompt, ProTier } from '../../types.ts';
+import type { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '../../src/lib/firebase';
+import type { UserData, GeneratedPrompt, ProTier } from '../../types';
 
 const getInitialUserData = (userId: string): UserData => ({
     uid: userId,
-    coins: 100, // Default coins
+    coins: 100,
     favorites: [],
     history: [],
-    lastCoinRewardDate: new Date().toISOString().split('T')[0],
-    adsWatchedToday: { count: 0, date: new Date().toISOString().split('T')[0] },
-    sharesToday: { count: 0, date: new Date().toISOString().split('T')[0] },
+    lastCoinRewardDate: '1970-01-01',
+    adsWatchedToday: { count: 0, date: '1970-01-01' },
+    sharesToday: { count: 0, date: '1970-01-01' },
     proTier: null,
     proTierExpiry: null,
 });
 
-export function useUserData() {
-    const { user } = useAuth(); 
+export function useUserData(user: User | null) {
     const [currentUserData, setCurrentUserData] = useState<UserData | null>(null);
 
-    const getUserData = useCallback(async (userId: string): Promise<UserData | null> => {
-        const userDocRef = doc(db, 'users', userId);
-        const initialData = getInitialUserData(userId);
-        try {
-            const docSnap = await getDoc(userDocRef);
-            if (docSnap.exists()) {
-                const firestoreData = docSnap.data() as Partial<UserData>;
-                return { ...initialData, ...firestoreData };
-            } else {
-                await setDoc(userDocRef, initialData);
-                return initialData;
-            }
-        } catch (error) {
-            console.error("Error fetching user data:", error);
-            return null;
-        }
-    }, []);
-
     useEffect(() => {
-        if (user) {
-            getUserData(user.uid).then(userData => {
-                if (!userData) {
-                    setCurrentUserData(null);
-                    return;
-                }
+        if (!user) {
+            setCurrentUserData(null);
+            return;
+        }
 
+        const userDocRef = doc(db, 'users', user.uid);
+
+        const manageUserData = async () => {
+            try {
+                const docSnap = await getDoc(userDocRef);
+                let userData;
+
+                if (docSnap.exists()) {
+                    userData = { ...getInitialUserData(user.uid), ...docSnap.data() };
+                } else {
+                    userData = getInitialUserData(user.uid);
+                    await setDoc(userDocRef, userData);
+                }
+                
                 const today = new Date().toISOString().split('T')[0];
-                let dataToUpdate: Partial<UserData> = {};
-                let needsUpdate = false;
-
-                const getTierPlan = (tier: ProTier | null) => {
-                    if (tier === 'gold') return 'pro';
-                    if (tier === 'silver') return 'plus';
-                    if (tier === 'bronze') return 'lite';
-                    return 'free';
-                }
-                const plan = getTierPlan(userData.proTier);
-
                 if (userData.lastCoinRewardDate !== today) {
-                    const dailyCoins = plan === 'pro' ? 999999 : plan === 'plus' ? 5000 : 1000;
-                    dataToUpdate = {
-                        ...dataToUpdate,
-                        coins: (userData.coins || 0) + dailyCoins,
+                    const dataToUpdate = {
+                        coins: (userData.coins || 0) + 1000,
                         lastCoinRewardDate: today,
                         adsWatchedToday: { count: 0, date: today },
                         sharesToday: { count: 0, date: today },
                     };
-                    needsUpdate = true;
+                    await updateDoc(userDocRef, dataToUpdate);
+                    userData = { ...userData, ...dataToUpdate };
                 }
+                
+                setCurrentUserData(userData);
 
-                if (userData.proTier && userData.proTierExpiry && new Date(userData.proTierExpiry) < new Date()) {
-                    dataToUpdate = { ...dataToUpdate, proTier: null, proTierExpiry: null };
-                    needsUpdate = true;
-                }
+            } catch (error) {
+                console.error("Error in useUserData:", error);
+                setCurrentUserData(null);
+            }
+        };
 
-                const finalUserData = { ...userData, ...dataToUpdate };
+        manageUserData();
 
-                if (needsUpdate) {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    updateDoc(userDocRef, dataToUpdate)
-                        .then(() => setCurrentUserData(finalUserData))
-                        .catch(err => {
-                            console.error("Failed to update user data:", err);
-                            setCurrentUserData(userData);
-                        });
-                } else {
-                    setCurrentUserData(userData);
-                }
-            });
-        } else {
-            setCurrentUserData(null);
-        }
-    }, [user, getUserData]);
+    }, [user]);
 
     const updateUserData = useCallback(async (data: Partial<UserData>) => {
         if (!user) return;
-        setCurrentUserData(prevData => (prevData ? { ...prevData, ...data } : null));
-        try {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, data);
-        } catch (error) {
-            console.error("Failed to update user data:", error);
-        }
+        
+        // Optimistic update for UI responsiveness
+        setCurrentUserData(prev => {
+            const new_data = prev ? { ...prev, ...data } : null;
+            if (new_data) {
+                const userDocRef = doc(db, 'users', user.uid);
+                updateDoc(userDocRef, data).catch(err => console.error("Firestore update failed", err));
+            }
+            return new_data;
+        });
+
     }, [user]);
 
     const deletePrompt = useCallback(async (promptId: string, type: 'favorites' | 'history') => {
         if (!user || !currentUserData) return;
         const promptToDelete = currentUserData[type].find(p => p.id === promptId);
-
         if (promptToDelete) {
              const userDocRef = doc(db, 'users', user.uid);
             try {
@@ -136,7 +108,7 @@ export function useUserData() {
         });
         return true;
     }, [currentUserData, user, updateUserData]);
-
+    
     const handleShareReward = useCallback(async () => {
         if (!currentUserData || !user) return false;
         const today = new Date().toISOString().split('T')[0];
