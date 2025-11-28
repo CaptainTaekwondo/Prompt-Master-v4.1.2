@@ -10,13 +10,13 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { getSubscriptionForUser, UserSubscription, PlanId } from '../services/subscriptionService';
+import { getSubscriptionForUser, UserSubscription, InternalPlanId } from '../services/subscriptionService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   subscription: UserSubscription | null;
-  currentPlan: PlanId | 'free';
+  currentPlan: InternalPlanId | 'free';
   isPremium: boolean;
   refreshSubscription: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
-  const [currentPlan, setCurrentPlan] = useState<PlanId | 'free'>('free');
+  const [currentPlan, setCurrentPlan] = useState<InternalPlanId | 'free'>('free');
   const [isPremium, setIsPremium] = useState(false);
 
   const refreshSubscription = useCallback(async () => {
@@ -48,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userSubscription) {
       setCurrentPlan(userSubscription.plan);
       setIsPremium(userSubscription.plan === 'plus' || userSubscription.plan === 'pro');
+      console.log('[AuthContext] Subscription plan:', userSubscription.plan, 'isPremium:', userSubscription.plan === 'plus' || userSubscription.plan === 'pro');
     } else {
       setCurrentPlan('free');
       setIsPremium(false);
