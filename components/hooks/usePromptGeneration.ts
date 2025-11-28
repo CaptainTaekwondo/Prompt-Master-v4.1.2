@@ -110,7 +110,17 @@ export function usePromptGeneration({
     
     const handleGenerate = async () => {
         if (!userInput) { setErrorKey('errorEnterIdea'); return; }
-        if (!checkAndDeductCoins(10)) return;
+        
+        let cost = 0;
+        if (mode === 'image') {
+            cost = 10;
+        } else if (mode === 'video') {
+            cost = 20;
+        } else if (mode === 'text') {
+            cost = 30;
+        }
+
+        if (!checkAndDeductCoins(cost)) return;
         
         setIsProcessing(true);
         setProcessingLabelKey('generatingButton');

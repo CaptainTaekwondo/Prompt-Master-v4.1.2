@@ -183,6 +183,13 @@ export default function PromptV4_1() {
       setIsLaunching(false);
     }, 2000);
   };
+
+  const getCost = () => {
+    if (mode === 'image') return t.costGenerateImage;
+    if (mode === 'video') return t.costGenerateVideo;
+    if (mode === 'text') return t.costGenerateText;
+    return '';
+  };
   
   const renderPage = () => {
     switch(page) {
@@ -222,7 +229,7 @@ export default function PromptV4_1() {
                   ) : (
                     <div className="flex flex-col items-center">
                       <span className="relative"><span className="absolute top-1/2 -translate-y-1/2 ltr:right-full rtl:left-full ltr:mr-2 rtl:ml-2 text-xl rocket-icon">🚀</span><span>{t.generateButton}</span></span>
-                      {currentUser && currentUserData?.proTier !== 'gold' && <span className="text-xs opacity-80 mt-1">{t.costGenerate} 🪙</span>}
+                      {currentUser && currentUserData?.proTier !== 'gold' && <span className="text-xs opacity-80 mt-1">{getCost()} 🪙</span>}
                     </div>
                   )}
                 </button>

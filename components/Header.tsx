@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
 import type { UserData, ProTier } from '../types.ts';
 
@@ -85,12 +84,14 @@ export const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, slogan
                   )}
                 </div>
                 {currentUserData && (
-                    <div className="h-11 flex items-center gap-2 bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 rounded-full text-white ltr:pl-3 rtl:pr-3">
-                        <span className="text-xl">🪙</span>
+                    <div
+                        className="flex items-center gap-2 bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 rounded-full p-1 text-white"
+                    >
+                        <span className="text-xl ltr:ml-2 rtl:mr-2">🪙</span>
                         <span className="font-bold text-lg">{currentUserData.coins}</span>
                         <button 
                           onClick={openEarnCoinsModal}
-                          className="ltr:ml-1 rtl:mr-1 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full font-bold text-base hover:bg-green-600 transition-colors"
+                          className="ltr:mr-1 rtl:ml-1 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full font-bold text-base hover:bg-green-600 transition-colors"
                           title={t.earnCoinsLink}
                         >
                           +

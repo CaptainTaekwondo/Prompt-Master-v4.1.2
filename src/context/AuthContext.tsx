@@ -8,9 +8,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
@@ -20,8 +17,6 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<User | null>;
   signInWithEmail: (email: string, password: string) => Promise<User | null>;
-  sendPhoneCode: (phoneNumber: string) => Promise<void>;
-  confirmPhoneCode: (code: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -30,7 +25,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -55,20 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userCredential.user;
   };
 
-  const sendPhoneCode = async (phoneNumber: string) => {
-    const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
-    const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
-    setConfirmationResult(result);
-  };
-
-  const confirmPhoneCode = async (code: string) => {
-    if (confirmationResult) {
-      await confirmationResult.confirm(code);
-    } else {
-      throw new Error('Confirmation result not available.');
-    }
-  };
-
   const logout = async () => {
     await signOut(auth);
   };
@@ -79,8 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle,
     signUpWithEmail,
     signInWithEmail,
-    sendPhoneCode,
-    confirmPhoneCode,
     logout,
   };
 
