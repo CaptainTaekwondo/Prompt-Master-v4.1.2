@@ -36,7 +36,7 @@ export default function PromptV4_1() {
   const t = translations[language as keyof typeof translations] || translations.en;
   const { user: currentUser, logout } = useAuth();
 
-  const { currentUserData, updateUserData, deletePrompt, handleWatchAd, handleShareReward, handlePurchase } = useUserData(currentUser);
+  const { currentUserData, updateUserData, deletePrompt, handleWatchAd, handleShareReward, handlePurchase } = useUserData();
   
   const {
       isLoginModalOpen, openLoginModal, closeLoginModal,

@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../src/context/AuthContext';
-import type { UserData, GeneratedPrompt } from '../../types.ts';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import type { UserData, GeneratedPrompt, ProTier } from '../../types.ts';
+import { doc, getDoc, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '../../src/lib/firebase';
 
 const getInitialUserData = (userId: string): UserData => ({
@@ -19,6 +19,8 @@ const getInitialUserData = (userId: string): UserData => ({
         count: 0,
         date: new Date().toISOString().split('T')[0],
     },
+    proTier: null,
+    proTierExpiry: null,
 });
 
 export function useUserData() {
@@ -41,23 +43,44 @@ export function useUserData() {
         if (user) {
             getUserData(user.uid).then(userData => {
                 const today = new Date().toISOString().split('T')[0];
+                let dataToUpdate: Partial<UserData> = {};
+                let needsUpdate = false;
+
+                // 1. Check for daily coin reward
                 if (userData.lastCoinRewardDate !== today) {
                     const dailyCoins = 
                         currentPlan === 'pro' ? 999999 : 
                         currentPlan === 'plus' ? 5000 : 
                         1000; // lite or free
 
-                    const updatedData: UserData = {
-                        ...userData,
+                    dataToUpdate = {
+                        ...dataToUpdate,
                         coins: (userData.coins || 0) + dailyCoins,
                         lastCoinRewardDate: today,
                         adsWatchedToday: { count: 0, date: today },
                         sharesToday: { count: 0, date: today },
                     };
-                    
+                    needsUpdate = true;
+                }
+
+                // 2. Check if pro tier expired
+                if (userData.proTier && userData.proTierExpiry) {
+                    if (new Date(userData.proTierExpiry) < new Date()) {
+                        dataToUpdate = {
+                            ...dataToUpdate,
+                            proTier: null,
+                            proTierExpiry: null,
+                        };
+                        needsUpdate = true;
+                    }
+                }
+                
+                const finalUserData = { ...userData, ...dataToUpdate };
+
+                if (needsUpdate) {
                     const userDocRef = doc(db, 'users', user.uid);
-                    updateDoc(userDocRef, updatedData).then(() => {
-                        setCurrentUserData(updatedData);
+                    updateDoc(userDocRef, dataToUpdate).then(() => {
+                        setCurrentUserData(finalUserData);
                     });
                 } else {
                     setCurrentUserData(userData);
@@ -72,22 +95,25 @@ export function useUserData() {
         if (!user) return;
         const userDocRef = doc(db, 'users', user.uid);
         await updateDoc(userDocRef, data);
-        setCurrentUserData(prevData => ({ ...prevData!, ...data }));
+        setCurrentUserData(prevData => (prevData ? { ...prevData, ...data } : null));
     }, [user]);
 
     const deletePrompt = useCallback(async (promptId: string, type: 'favorites' | 'history') => {
-        if (!user) return;
-        const userDocRef = doc(db, 'users', user.uid);
+        if (!user || !currentUserData) return;
         const promptToDelete = currentUserData?.[type].find(p => p.id === promptId);
 
         if (promptToDelete) {
+            const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, {
                 [type]: arrayRemove(promptToDelete)
             });
-            setCurrentUserData(prevData => ({
-                ...prevData!,
-                [type]: prevData![type].filter(p => p.id !== promptId),
-            }));
+            setCurrentUserData(prevData => {
+                if (!prevData) return null;
+                return {
+                    ...prevData,
+                    [type]: prevData[type].filter(p => p.id !== promptId),
+                };
+            });
         }
     }, [user, currentUserData]);
 
@@ -134,11 +160,28 @@ export function useUserData() {
         return true;
     }, [currentUserData, user, updateUserData]);
 
+    const handlePurchase = useCallback(async (tier: ProTier, durationDays: number, paymentMethod: 'vodafone' | 'paypal') => {
+        if (!user) return;
+
+        const now = new Date();
+        const expiryDate = new Date(now.setDate(now.getDate() + durationDays));
+
+        // This is a client-side simulation.
+        const updatedData: Partial<UserData> = {
+            proTier: tier,
+            proTierExpiry: expiryDate.toISOString(),
+        };
+
+        await updateUserData(updatedData);
+
+    }, [user, updateUserData]);
+
     return {
         currentUserData,
         updateUserData,
         deletePrompt,
         handleWatchAd,
         handleShareReward,
+        handlePurchase,
     };
 }
