@@ -54,16 +54,22 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
                         const capture = await actions.order.capture();
                         console.log('Payment successful!', capture);
                         setPaypalStatus('success');
-                    } catch (error) {
-                        console.error('Error capturing payment:', error);
+                    } catch (err: any) {
+                        console.error('PayPal onApprove error:', err);
                         setPaypalStatus('error');
-                        setPaypalError('حدث خطأ أثناء تأكيد الدفع. يرجى المحاولة مرة أخرى.');
+                        const msg =
+                          (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
+                          JSON.stringify(err);
+                        setPaypalError(msg || 'حدث خطأ غير متوقع أثناء تأكيد الدفع.');
                     }
                 },
                 onError: (err: any) => {
-                    console.error('PayPal Button Error:', err);
+                    console.error('PayPal onError:', err);
                     setPaypalStatus('error');
-                    setPaypalError('حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى.');
+                    const msg =
+                      (err && typeof err === 'object' && 'message' in err && (err as any).message) ||
+                      JSON.stringify(err);
+                    setPaypalError(msg || 'حدث خطأ غير متوقع أثناء معالجة الدفع.');
                 },
                 onCancel: () => {
                     setPaypalStatus('idle');
@@ -127,7 +133,11 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
 
                             {paypalStatus === 'loading' && <p className="text-sm text-white/50">جاري تحميل زر الدفع من PayPal...</p>}
                             {paypalStatus === 'success' && <p className="text-green-400">تم الدفع بنجاح! سيتم تفعيل اشتراكك قريباً.</p>}
-                            {paypalStatus === 'error' && paypalError && <p className="text-red-400">{paypalError}</p>}
+                            {paypalStatus === 'error' && paypalError && (
+                                <p className="text-xs text-red-500 mt-2">
+                                    {paypalError}
+                                </p>
+                            )}
                         </div>
 
                         <div className="text-center mt-6">
