@@ -102,7 +102,7 @@ export default function PromptV4_1() {
 
   const handleConfirmPayment = () => {
     if (paymentContext) {
-        handlePurchase(paymentContext.tier, paymentContext.durationDays, paymentContext.paymentMethod);
+        handlePurchase(paymentContext.tier, paymentContext.durationDays);
         closePaymentModal();
         setPage('main');
     }
@@ -147,13 +147,14 @@ export default function PromptV4_1() {
     };
 
     const onAdComplete = () => {
-        const success = handleWatchAd();
-        if (success) {
-            closeEarnCoinsModal();
-            openAdRewardModal();
-        } else {
-            closeEarnCoinsModal();
-        }
+        handleWatchAd().then(success => {
+            if (success) {
+                closeEarnCoinsModal();
+                openAdRewardModal();
+            } else {
+                closeEarnCoinsModal();
+            }
+        });
     };
     
     const handleShareForCoins = async () => {
@@ -164,7 +165,7 @@ export default function PromptV4_1() {
         };
         try {
             await navigator.share(shareData);
-            const rewarded = handleShareReward();
+            const rewarded = await handleShareReward();
             if (rewarded) {
                 closeEarnCoinsModal();
             }
