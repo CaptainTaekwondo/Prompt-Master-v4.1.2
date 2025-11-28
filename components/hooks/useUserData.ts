@@ -1,9 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, arrayRemove } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, arrayRemove, onSnapshot, increment } from 'firebase/firestore';
 import { db } from '../../src/lib/firebase';
 import type { UserData, GeneratedPrompt, ProTier } from '../../types';
+import { ensureDailyCoinsForUser } from '../../src/services/coinsService';
 
 const getInitialUserData = (userId: string): UserData => ({
     uid: userId,
@@ -28,70 +29,46 @@ export function useUserData(user: User | null) {
 
         const userDocRef = doc(db, 'users', user.uid);
 
-        const manageUserData = async () => {
-            try {
-                const docSnap = await getDoc(userDocRef);
-                let userData;
+        // First, ensure the user has daily coins. This also creates the user doc if it doesn't exist.
+        ensureDailyCoinsForUser(user.uid).catch(error => {
+            console.error("Error ensuring daily coins on initial load:", error);
+        });
 
-                if (docSnap.exists()) {
-                    userData = { ...getInitialUserData(user.uid), ...docSnap.data() };
-                } else {
-                    userData = getInitialUserData(user.uid);
-                    await setDoc(userDocRef, userData);
-                }
-                
-                const today = new Date().toISOString().split('T')[0];
-                if (userData.lastCoinRewardDate !== today) {
-                    const dataToUpdate = {
-                        coins: (userData.coins || 0) + 1000,
-                        lastCoinRewardDate: today,
-                        adsWatchedToday: { count: 0, date: today },
-                        sharesToday: { count: 0, date: today },
-                    };
-                    await updateDoc(userDocRef, dataToUpdate);
-                    userData = { ...userData, ...dataToUpdate };
-                }
-                
+        // Then, set up a real-time listener for the user data document.
+        const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const userData = { ...getInitialUserData(user.uid), ...docSnap.data() };
                 setCurrentUserData(userData);
-
-            } catch (error) {
-                console.error("Error in useUserData:", error);
-                setCurrentUserData(null);
+            } else {
+                console.log("User document doesn't exist yet, waiting for creation by ensureDailyCoinsForUser...");
             }
-        };
+        }, (error) => {
+            console.error("Error in user data onSnapshot listener:", error);
+            setCurrentUserData(null);
+        });
 
-        manageUserData();
+        return () => unsubscribe();
 
     }, [user]);
 
     const updateUserData = useCallback(async (data: Partial<UserData>) => {
         if (!user) return;
-        
-        // Optimistic update for UI responsiveness
-        setCurrentUserData(prev => {
-            const new_data = prev ? { ...prev, ...data } : null;
-            if (new_data) {
-                const userDocRef = doc(db, 'users', user.uid);
-                updateDoc(userDocRef, data).catch(err => console.error("Firestore update failed", err));
-            }
-            return new_data;
-        });
-
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+            await updateDoc(userDocRef, data);
+        } catch (err) {
+            console.error("Firestore update failed", err);
+        }
     }, [user]);
 
     const deletePrompt = useCallback(async (promptId: string, type: 'favorites' | 'history') => {
         if (!user || !currentUserData) return;
         const promptToDelete = currentUserData[type].find(p => p.id === promptId);
         if (promptToDelete) {
-             const userDocRef = doc(db, 'users', user.uid);
+            const userDocRef = doc(db, 'users', user.uid);
             try {
                 await updateDoc(userDocRef, { [type]: arrayRemove(promptToDelete) });
-                setCurrentUserData(prevData => {
-                    if (!prevData) return null;
-                    return { ...prevData, [type]: prevData[type].filter(p => p.id !== promptId) };
-                });
-            } catch(e) { console.error(e)}
-
+            } catch(e) { console.error(e); }
         }
     }, [user, currentUserData]);
 
@@ -99,15 +76,26 @@ export function useUserData(user: User | null) {
         if (!currentUserData || !user) return false;
         const today = new Date().toISOString().split('T')[0];
         const adsData = currentUserData.adsWatchedToday || { count: 0, date: '1970-01-01' };
-        if (adsData.date === today && adsData.count >= 10) return false;
+
+        if (adsData.date === today && adsData.count >= 10) {
+            console.log("Ad watch limit reached for today.");
+            return false;
+        }
 
         const newCount = adsData.date === today ? adsData.count + 1 : 1;
-        await updateUserData({
-            coins: (currentUserData.coins || 0) + 10,
-            adsWatchedToday: { count: newCount, date: today },
-        });
-        return true;
-    }, [currentUserData, user, updateUserData]);
+        const userDocRef = doc(db, 'users', user.uid);
+
+        try {
+            await updateDoc(userDocRef, {
+                coins: increment(10),
+                adsWatchedToday: { count: newCount, date: today },
+            });
+            return true;
+        } catch (error) {
+            console.error("Failed to update coins for ad reward:", error);
+            return false;
+        }
+    }, [user, currentUserData]);
     
     const handleShareReward = useCallback(async () => {
         if (!currentUserData || !user) return false;
@@ -116,12 +104,18 @@ export function useUserData(user: User | null) {
         if (sharesData.date === today && sharesData.count >= 5) return false;
 
         const newCount = sharesData.date === today ? sharesData.count + 1 : 1;
-        await updateUserData({
-            coins: (currentUserData.coins || 0) + 15,
-            sharesToday: { count: newCount, date: today },
-        });
-        return true;
-    }, [currentUserData, user, updateUserData]);
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+            await updateDoc(userDocRef, {
+                coins: increment(15),
+                sharesToday: { count: newCount, date: today },
+            });
+            return true;
+        } catch (error) {
+            console.error("Failed to update coins for share reward:", error);
+            return false;
+        }
+    }, [user, currentUserData]);
 
     const handlePurchase = useCallback(async (tier: ProTier, durationDays: number) => {
         if (!user) return;
