@@ -12,10 +12,11 @@ interface SubscriptionPageProps {
   t: Translations;
 }
 
+// UPDATED PRICES
 const plans: { tier: ProTier; durationDays: number; tierKey: keyof Translations['proPlans'], cardClass: string, ctaClass: string, price: string }[] = [
-    { tier: 'bronze', durationDays: 7, tierKey: 'bronze', cardClass: 'plan-card--bronze', ctaClass: 'plan-cta-button--bronze', price: '5' },
-    { tier: 'silver', durationDays: 30, tierKey: 'silver', cardClass: 'plan-card--silver', ctaClass: 'plan-cta-button--silver', price: '15' },
-    { tier: 'gold', durationDays: 90, tierKey: 'gold', cardClass: 'plan-card--gold', ctaClass: 'plan-cta-button--gold', price: '30' },
+    { tier: 'bronze', durationDays: 7, tierKey: 'bronze', cardClass: 'plan-card--bronze', ctaClass: 'plan-cta-button--bronze', price: '5.00' },
+    { tier: 'silver', durationDays: 30, tierKey: 'silver', cardClass: 'plan-card--silver', ctaClass: 'plan-cta-button--silver', price: '20.00' },
+    { tier: 'gold', durationDays: 90, tierKey: 'gold', cardClass: 'plan-card--gold', ctaClass: 'plan-cta-button--gold', price: '50.00' },
 ];
 
 // Map for English tier names, to be displayed regardless of language
@@ -102,7 +103,7 @@ export const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack, onPu
               <p className="text-white/60 text-sm mb-6 h-10">{descriptions[plan.tier]}</p>
 
               <p className="text-5xl font-black my-4 text-white">
-                {planDetails.price} 
+                ${plan.price} 
                 <span className="text-xl font-medium text-white/70">/ {planDetails.duration}</span>
               </p>
 

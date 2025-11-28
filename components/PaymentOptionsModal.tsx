@@ -1,21 +1,27 @@
 
 import React, { useState } from 'react';
 import type { translations } from '../translations.ts';
-import { PaypalPlanButton } from '../src/components/PaypalPlanButton'; 
+import { PaypalPlanButton } from '../src/components/PaypalPlanButton';
 
 type Translations = typeof translations['en'];
+
+// Define plan amounts inside the modal
+const PLAN_AMOUNTS: Record<string, string> = {
+    bronze: "5.00",
+    silver: "20.00",
+    gold: "50.00",
+};
 
 interface PaymentOptionsModalProps {
     t: Translations;
     onClose: () => void;
-    // Keep this for Vodafone, or if you want to handle PayPal selection in the parent
     onSelectPayment: (method: 'vodafone') => void; 
-    planId: 'lite' | 'plus' | 'pro';
-    amount: string;
+    planId: 'bronze' | 'silver' | 'gold'; // Using the ProTier type names
 }
 
-export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onClose, onSelectPayment, planId, amount }) => {
+export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onClose, onSelectPayment, planId }) => {
     const [step, setStep] = useState('choose'); // 'choose' | 'paypal'
+    const amount = PLAN_AMOUNTS[planId] || "0.00";
 
     const handlePaypalSelect = () => {
         setStep('paypal');
@@ -52,13 +58,15 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ t, onC
 
                 {step === 'paypal' && (
                     <>
-                        <div className="flex items-center mb-4">
+                        <div className="flex items-center mb-6">
                             <button onClick={handleBackToChoose} className="text-sm text-white/60 hover:text-white mr-4">&#x2190; رجوع</button>
                             <h2 className="text-xl font-bold text-center text-white">تابع الدفع عبر PayPal</h2>
                         </div>
-                        <p className="text-center text-white/70 mb-4">اختر الخطة: {planId} (${amount})</p>
-                        <PaypalPlanButton planId={planId} amount={amount} />
-                         <div className="text-center mt-4">
+                        <p className="text-center text-white/70 mb-5">سيتم الدفع لهذه الخطة عبر PayPal.</p>
+                        <div id="paypal-button-wrapper">
+                           <PaypalPlanButton planId={planId} amount={amount} />
+                        </div>
+                         <div className="text-center mt-6">
                             <button onClick={onClose} className="text-sm text-white/60 hover:text-white">{t.cancelButton}</button>
                         </div>
                     </>

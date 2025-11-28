@@ -8,7 +8,7 @@ declare global {
 }
 
 interface PaypalPlanButtonProps {
-    planId: 'lite' | 'plus' | 'pro';
+    planId: 'bronze' | 'silver' | 'gold';
     amount: string;
 }
 
@@ -21,6 +21,12 @@ export const PaypalPlanButton: React.FC<PaypalPlanButtonProps> = ({ planId, amou
             paypalButtonRef.current.innerHTML = '';
 
             window.paypal.Buttons({
+                style: {
+                    layout: 'vertical',
+                    color:  'blue',
+                    shape:  'rect',
+                    label:  'paypal'
+                },
                 createOrder: (data: any, actions: any) => {
                     return actions.order.create({
                         purchase_units: [{
@@ -36,6 +42,7 @@ export const PaypalPlanButton: React.FC<PaypalPlanButtonProps> = ({ planId, amou
                     try {
                         const capture = await actions.order.capture();
                         console.log('Payment successful!', capture);
+                        // You can replace this with a more integrated success message inside the modal
                         alert('تم الدفع بنجاح! شكراً لك.'); 
                     } catch (error) {
                         console.error('Error capturing payment:', error);
