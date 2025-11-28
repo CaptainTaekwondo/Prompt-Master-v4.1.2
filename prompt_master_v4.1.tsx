@@ -83,8 +83,14 @@ export default function PromptV4_1() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   
-  const handlePurchaseRequest = (tier: ProTier, durationDays: number) => {
-    openPaymentOptionsModal({ tier, durationDays });
+  const handlePurchaseRequest = (tier: ProTier, amount: string) => {
+    const durationMap: Record<ProTier, number> = {
+      bronze: 7,
+      silver: 30,
+      gold: 90,
+    };
+    const durationDays = durationMap[tier];
+    openPaymentOptionsModal({ tier, amount, durationDays });
   };
 
   const handleSelectPaymentMethod = (paymentMethod: 'vodafone' | 'paypal') => {
@@ -272,7 +278,15 @@ export default function PromptV4_1() {
       {isEarnCoinsModalOpen && <EarnCoinsModal onClose={closeEarnCoinsModal} onAdComplete={onAdComplete} onShareForCoins={handleShareForCoins} t={t} userData={currentUserData} onSubscribe={() => { closeEarnCoinsModal(); setPage('subscription'); }} />}
       {isAdRewardModalOpen && <AdRewardModal onClose={closeAdRewardModal} t={t} userName={currentUser?.displayName || 'Guest'} />}
       {isPaymentModalOpen && <PaymentModal t={t} context={paymentContext} onClose={closePaymentModal} onConfirm={handleConfirmPayment} />}
-      {isPaymentOptionsModalOpen && <PaymentOptionsModal t={t} onClose={closePaymentOptionsModal} onSelectPayment={handleSelectPaymentMethod} />}
+      {isPaymentOptionsModalOpen && subscriptionContext && (
+        <PaymentOptionsModal
+          t={t}
+          onClose={closePaymentOptionsModal}
+          onSelectPayment={handleSelectPaymentMethod}
+          planId={subscriptionContext.tier}
+          amount={subscriptionContext.amount}
+        />
+      )}
     </div>
   );
 }
