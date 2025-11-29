@@ -114,8 +114,8 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
     const generalTooltipKey = category.slice(0, -1) as keyof typeof t.tooltips;
     
     if (category === 'specialStyles') {
-        const specialStyleTooltips = t.tooltips.specialStyles as Record<string, { label: string; description: string }>;
-        return specialStyleTooltips[value]?.description;
+        const specialStyleTooltips = t.tooltips?.specialStyles as Record<string, { label: string; description: string }> | undefined;
+        return specialStyleTooltips?.[value]?.description;
     }
 
     const specificTooltips = t.tooltips[category] as Record<string, string> | undefined;
@@ -137,11 +137,11 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
   const styleOptions = useMemo(() => {
     if (!imageComponents?.styles) return [];
     
-    const specialStyleLabels = t.tooltips.specialStyles as Record<string, { label: string; description: string }>;
+    const specialStyleLabels = t.tooltips?.specialStyles as Record<string, { label: string; description: string }> | undefined;
 
     return imageComponents.styles.map(style => ({
         value: style.id,
-        label: specialStyleLabels[style.id]?.label || style.id,
+        label: specialStyleLabels?.[style.id]?.label || style.id,
     }));
   }, [imageComponents, t]);
 

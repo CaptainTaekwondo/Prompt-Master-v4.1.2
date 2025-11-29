@@ -37,68 +37,46 @@
   "styles": [
     {
       "id": "none",
-      "label": "بدون استايل إضافي",
-      "description": "لن يتم تطبيق أي استايل خاص، يتم استخدام الإعدادات الافتراضية فقط.",
       "promptModule": ""
     },
     {
       "id": "cinematic_teal_orange",
-      "label": "Cinematic Teal & Orange",
-      "description": "استايل سينمائي يضيف تباينًا لونياً بين الأزرق السماوي والبرتقالي لإحساس درامي عميق في الصورة.",
       "promptModule": "cinematic teal-and-orange color grading, dramatic lighting, shallow depth of field, soft film look, shot on 35mm lens, high dynamic range, subtle film grain"
     },
     {
       "id": "moody_dark",
-      "label": "Moody Dark",
-      "description": "استايل مظلم ودرامي يعتمد على الظلال العميقة والألوان الهادئة، مثالي للبورتريه والأجواء الغامضة.",
       "promptModule": "moody low-key photo style, deep shadows, soft directional light, desaturated colors, rich contrast, cinematic atmosphere, dark background"
     },
     {
       "id": "pastel_soft",
-      "label": "Pastel Soft Tones",
-      "description": "ألوان باستيل ناعمة تضيف إحساسًا لطيفًا وهادئًا يناسب صور الـ lifestyle والبراندات الأنيقة.",
       "promptModule": "soft pastel color palette, low contrast, airy and light atmosphere, gentle highlights, creamy tones, minimal shadows, dreamy aesthetic"
     },
     {
       "id": "vintage_film",
-      "label": "مظهر الفيلم القديم",
-      "description": "يحاكي مظهر كاميرات الفيلم الكلاسيكية مع حبيبات فيلم واضحة وألوان باهتة قليلاً لإضفاء طابع الحنين.",
       "promptModule": "vintage 35mm film look, noticeable film grain, slightly desaturated colors, classic color science, retro aesthetic, authentic film texture"
     },
     {
       "id": "ghibli_anime",
-      "label": "استايل أنمي جيبلي",
-      "description": "مستوحى من استوديوهات جيبلي، يتميز بالرسم اليدوي، الخلفيات الطبيعية الخلابة، والأجواء الدافئة الساحرة.",
       "promptModule": "Ghibli anime style, hand-drawn look, picturesque landscapes, warm and whimsical atmosphere, soft painterly backgrounds, cel-shaded characters"
     },
     {
       "id": "vibrant_pop_art",
-      "label": "فن البوب المشرق",
-      "description": "فن جريء ومفعم بالحياة مستوحى من الكوميكس، يستخدم ألوانًا أساسية قوية ونقاط (Ben-Day dots).",
       "promptModule": "vibrant Pop Art style, bold primary colors, heavy black outlines, Ben-Day dots, graphic and punchy, comic book aesthetic"
     },
     {
       "id": "epic_fantasy_painting",
-      "label": "لوحة خيالية ملحمية",
-      "description": "لوحة فنية رقمية بمشاهد خيالية ملحمية، إضاءة درامية، وتفاصيل غنية، مستوحاة من عوالم الأساطير.",
       "promptModule": "epic fantasy digital painting, dramatic and dynamic lighting, rich details, mythical creatures, fantastical landscapes, style of Frank Frazetta and HR Giger"
     },
     {
       "id": "minimalist_line_art",
-      "label": "فن خطي بسيط",
-      "description": "يعتمد على البساطة والخطوط النظيفة، غالبًا باللونين الأبيض والأسود، مثالي للشعارات والأيقونات.",
       "promptModule": "minimalist single-line art, clean and simple, black on white, elegant and modern, continuous line drawing"
     },
     {
       "id": "cyberpunk_dystopia",
-      "label": "ديستوبيا السايبربنك",
-      "description": "مشاهد مدن مستقبلية بائسة مضاءة بالنيون، أمطار دائمة، وتكنولوجيا متقدمة في عالم مظلم.",
       "promptModule": "dystopian cyberpunk city, neon-drenched streets, perpetual rain, high-tech low-life, towering skyscrapers, gritty and atmospheric, Blade Runner aesthetic"
     },
     {
       "id": "surreal_dreamscape",
-      "label": "مشهد حالم سريالي",
-      "description": "عالم سريالي يشبه الأحلام، يجمع بين عناصر غير منطقية وغريبة لخلق صور مثيرة للتفكير.",
       "promptModule": "surreal dreamscape, illogical and bizarre combinations, fantastical elements, melting objects, otherworldly atmosphere, style of Salvador Dali"
     }
   ],
