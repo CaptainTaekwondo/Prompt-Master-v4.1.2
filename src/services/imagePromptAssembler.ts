@@ -1,96 +1,75 @@
-'''
+
 import { ImagePromptInputs } from '../types';
 
-// Grouping platforms for easier logic management
-const aR_MODELS: string[] = ['Midjourney'];
-const NL_MODELS: string[] = ['DALL-E 3', 'ChatGPT', 'Gemini', 'Copilot', 'Grok'];
-const UI_MODELS: string[] = ['Stable Diffusion', 'Leonardo.Ai', 'Playground AI', 'Adobe Firefly', 'Canva', 'Ideogram'];
+// --- Platform Strategy Groups ---
 
-const getAspectRatioPrefix = (ratio: string): string => {
-  switch (ratio) {
-    case '16:9': return 'A wide cinematic horizontal image of ';
-    case '9:16': return 'A tall vertical portrait image of ';
-    case '1:1': return 'A square image of ';
-    case '4:3': return 'A wide standard image of ';
-    case '3:2': return 'A landscape photography style image of ';
-    default: return '';
-  }
+// STRATEGY A: "Meta-Prompt" models that benefit from role-playing and detailed instructions.
+const META_PROMPT_PLATFORMS = ['DALL-E 3', 'ChatGPT', 'Gemini', 'Copilot', 'Grok', 'Midjourney'];
+
+// STRATEGY B: "Direct-Prompt" models that prefer concise, keyword-driven descriptions.
+const DIRECT_PLATFORMS: string[] = ['Ideogram', 'Stable Diffusion', 'Leonardo.Ai', 'Playground AI', 'Adobe Firefly', 'Canva'];
+
+
+// --- Helper Functions ---
+
+// Gets a natural language prefix for aspect ratio.
+const getAspectRatioText = (ratio: string): string => {
+  const aspectRatios: { [key: string]: string } = {
+    '16:9': 'A wide cinematic horizontal image of ',
+    '9:16': 'A tall vertical portrait image of ',
+    '1:1': 'A square image of ',
+    '4:3': 'A wide standard image of ',
+    '3:2': 'A landscape photography style image of ',
+  };
+  return aspectRatios[ratio] || '';
 };
 
+
+// --- Main Prompt Assembly Function ---
 export const assembleImagePrompt = (settings: ImagePromptInputs): string => {
-  const { idea, platform, style, composition, camera, lighting, fashionEra, videoEffect, aspectRatio, quality } = settings;
+  const { 
+    idea, platform, style, composition, camera, 
+    lighting, fashionEra, videoEffect, aspectRatio, quality 
+  } = settings;
 
-  let prompt = '';
-  let finalPrompt = '';
+  // 1. Build the core visual description from all selected options.
+  const styleElements = [
+    style !== 'default' ? style : '',
+    lighting !== 'default' ? lighting : '',
+    composition !== 'default' ? composition : '',
+    camera !== 'default' ? camera : '',
+    fashionEra !== 'default' ? `${fashionEra} style` : '',
+    videoEffect !== 'default' ? videoEffect : '',
+    quality !== 'default' ? quality : ''
+  ].filter(Boolean).join(', ');
 
-  // 1. Build the core description
-  let description = idea;
+  let fullDescription = idea;
+  if (styleElements) {
+    fullDescription += `, ${styleElements}`;
+  }
+  
+  // 2. Apply the correct strategy based on the selected platform.
 
-  // Add visual style elements for platforms that use them in the text
-  if (!UI_MODELS.includes(platform)) {
-    const styleElements = [
-      style !== 'default' ? style : '',
-      lighting !== 'default' ? lighting : '',
-      composition !== 'default' ? composition : '',
-      camera !== 'default' ? camera : '',
-      fashionEra !== 'default' ? `${fashionEra} style` : '',
-      videoEffect !== 'default' ? videoEffect : '',
-      quality !== 'default' ? quality : ''
-    ].filter(Boolean).join(', ');
+  // STRATEGY B: For Direct-Prompt platforms, return only the clean description.
+  if (DIRECT_PLATFORMS.includes(platform)) {
+    return fullDescription;
+  }
 
-    if (styleElements) {
-      description += `, in a ${styleElements} style`;
+  // STRATEGY A: For Meta-Prompt platforms, build the detailed wrapper.
+  if (META_PROMPT_PLATFORMS.includes(platform)) {
+    const metaPromptWrapper = `Act as a world-class photographer and I will provide you with a concept and you will create a detailed, realistic, and visually compelling image prompt based on it. Use the following key elements to craft your response:\n\n[INSTRUCTIONS]\n- Start with a clear, concise summary of the main subject and action.\n- Describe the setting and environment with rich, evocative language.\n- Detail the lighting, mood, and atmosphere to set the tone.\n- Specify the artistic style, composition, and camera view for a dynamic shot.\n- Mention any relevant character details, attire, or actions.\n- Use a comma-separated list of keywords at the end for emphasis.\n- Do NOT use any line breaks, only one block of text.\n\n[AVOID]\n- Do not include your own commentary or interpretation outside of the prompt itself.\n- Do not ask me any questions.\n- Do not use any line breaks in your response.`;
+
+    // Handle platform-specific syntax for aspect ratio
+    if (platform === 'Midjourney') {
+      return `${metaPromptWrapper}\n\n[MY IDEA]: \"${fullDescription}\" --ar ${aspectRatio}`;
+    } else {
+      // For DALL-E 3, Gemini, etc., use a natural language prefix.
+      const prefix = getAspectRatioText(aspectRatio);
+      const prefixedDescription = `${prefix}${fullDescription}`;
+      return `${metaPromptWrapper}\n\n[MY IDEA]: \"${prefixedDescription}\"`;
     }
   }
 
-  // 2. Handle platform-specific formatting
-  if (NL_MODELS.includes(platform)) {
-    // Natural Language Models
-    const prefix = getAspectRatioPrefix(aspectRatio);
-    finalPrompt = `Act as a world-class photographer and I will provide you with a concept and you will create a detailed, realistic, and visually compelling image prompt based on it. Use the following key elements to craft your response:
-
-[INSTRUCTIONS]
-- Start with a clear, concise summary of the main subject and action.
-- Describe the setting and environment with rich, evocative language.
-- Detail the lighting, mood, and atmosphere to set the tone.
-- Specify the artistic style, composition, and camera view for a dynamic shot.
-- Mention any relevant character details, attire, or actions.
-- Use a comma-separated list of keywords at the end for emphasis.
-- Do NOT use any line breaks, only one block of text.
-
-[AVOID]
-- Do not include your own commentary or interpretation outside of the prompt itself.
-- Do not ask me any questions.
-- Do not use any line breaks in your response.
-
-[MY IDEA]: "${prefix}${description}"`;
-  } else if (aR_MODELS.includes(platform)) {
-    // --ar parameter models (Midjourney)
-    finalPrompt = `Act as a world-class photographer and I will provide you with a concept and you will create a detailed, realistic, and visually compelling image prompt based on it. Use the following key elements to craft your response:
-
-[INSTRUCTIONS]
-- Start with a clear, concise summary of the main subject and action.
-- Describe the setting and environment with rich, evocative language.
-- Detail the lighting, mood, and atmosphere to set the tone.
-- Specify the artistic style, composition, and camera view for a dynamic shot.
-- Mention any relevant character details, attire, or actions.
-- Use a comma-separated list of keywords at the end for emphasis.
-- Do NOT use any line breaks, only one block of text.
-
-[AVOID]
-- Do not include your own commentary or interpretation outside of the prompt itself.
-- Do not ask me any questions.
-- Do not use any line breaks in your response.
-
-[MY IDEA]: "${description}" --ar ${aspectRatio}`;
-  } else if (platform === 'Ideogram') {
-    // Ideogram - Clean, descriptive prompt
-    finalPrompt = description;
-  } else {
-    // Other/UI-based models (Stable Diffusion, etc.)
-    finalPrompt = description;
-  }
-
-  return finalPrompt;
+  // Fallback for any unhandled platform defaults to the direct approach.
+  return fullDescription;
 };
-''

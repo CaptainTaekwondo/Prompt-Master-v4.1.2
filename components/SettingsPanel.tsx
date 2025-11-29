@@ -2,12 +2,12 @@
 import React, { useState, useMemo } from 'react';
 import type { PromptSettings, GenerationMode, ProfessionalTextSettings, ImagePromptComponents } from '../types.ts';
 import { Card } from './Card.tsx';
-import { 
+import {
     BASE_IMAGE_STYLES,
     BASE_IMAGE_LIGHTING,
     BASE_IMAGE_COMPOSITIONS,
-    PLATFORMS_DATA, 
-    ASPECT_RATIOS, 
+    PLATFORMS_DATA,
+    ASPECT_RATIOS,
     QUALITIES,
     VIDEO_PURPOSES,
     VIDEO_DURATIONS,
@@ -61,7 +61,7 @@ const CustomSelect: React.FC<{
 );
 
 const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 'setProTextSettings'>> = ({ settings, setSettings, mode, selectedPlatformName, setSelectedPlatformName, t, setPage, imageComponents }) => {
-  
+
   const dynamicVideoOptions = useMemo(() => getVideoOptionsForPurpose(settings.videoPurpose), [settings.videoPurpose]);
 
   const handleSettingChange = (field: keyof PromptSettings) => (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -107,12 +107,12 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
         return { value: opt.value, label: translationObject[opt.value] || opt.label };
     });
   };
-  
+
   type TooltipCategory = 'platforms' | 'styles' | 'videoStyles' | 'lightings' | 'videoLightings' | 'compositions' | 'cameraShots' | 'aspectRatios' | 'qualities' | 'specialStyles';
 
   const getTooltipText = (category: TooltipCategory, value: string): string | undefined => {
     const generalTooltipKey = category.slice(0, -1) as keyof typeof t.tooltips;
-    
+
     if (category === 'specialStyles') {
         const specialStyleTooltips = t.tooltips?.specialStyles as Record<string, { label: string; description: string }> | undefined;
         return specialStyleTooltips?.[value]?.description;
@@ -131,19 +131,8 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
   }
 
   const selectedStyleDescription = useMemo(() => {
-    return getTooltipText('specialStyles', settings.style);
+    return getTooltipText('styles', settings.style);
   }, [settings.style, t]);
-
-  const styleOptions = useMemo(() => {
-    if (!imageComponents?.styles) return [];
-    
-    const specialStyleLabels = t.tooltips?.specialStyles as Record<string, { label: string; description: string }> | undefined;
-
-    return imageComponents.styles.map(style => ({
-        value: style.id,
-        label: specialStyleLabels?.[style.id]?.label || style.id,
-    }));
-  }, [imageComponents, t]);
 
 
   return (
@@ -156,10 +145,10 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
                 tooltip={t.tooltips.style}
                 value={settings.style}
                 onChange={handleSettingChange('style')}
-                options={styleOptions}
+                options={translatedOptions(BASE_IMAGE_STYLES, 'style')}
                 className="mb-2"
               />
-              {settings.style !== 'none' && selectedStyleDescription && (
+              {settings.style !== 'default' && settings.style !== 'none' && selectedStyleDescription && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-black/20 p-2 rounded-md">
                   {selectedStyleDescription}
                 </p>
@@ -167,9 +156,9 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
             </div>
 
             <div className="border-t border-slate-300 dark:border-white/20 my-2"></div>
-            
+
             <p className="text-sm text-center text-slate-500 dark:text-slate-400">General Settings</p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
                 <CustomSelect
                     label={t.platformLabel}
@@ -292,7 +281,7 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
                 options={translatedOptions(QUALITIES, 'quality')}
             />
         </div>
-        
+
         <div className="border-t border-slate-300 dark:border-white/20 my-4"></div>
         <button
             onClick={() => setPage(mode === 'image' ? 'image_report' : 'video_report')}
@@ -320,7 +309,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
     props.setSettings(value);
     triggerSpin();
   };
-  
+
   const wrappedSetProTextSettings: typeof props.setProTextSettings = (value) => {
     props.setProTextSettings(value);
     triggerSpin();
@@ -330,7 +319,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
     if (mode !== value) {
         // Reset settings when switching mode
         const newSettings: Partial<PromptSettings> = {
-            style: 'none', 
+            style: 'default', // Changed from 'none' to 'default'
             lighting: 'default',
             composition: 'default',
             cameraShot: 'default',
@@ -365,16 +354,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
     <Card title={t.settingsCardTitle} icon={<span className={isGearSpinning ? 'spin-animation' : ''}>⚙️</span>}>
       <div className="flex flex-col gap-6">
         {mode === 'text' ? (
-          <ProTextSettingsComponent 
-            settings={props.proTextSettings} 
-            setSettings={wrappedSetProTextSettings} 
-            t={t} 
+          <ProTextSettingsComponent
+            settings={props.proTextSettings}
+            setSettings={wrappedSetProTextSettings}
+            t={t}
             setPage={props.setPage}
           />
         ) : (
           <ImageVideoSettings {...imageVideoProps} />
         )}
-        
+
         <div className="bg-slate-200/70 dark:bg-black/30 p-1 rounded-full flex w-full">
           <button
             onClick={() => wrappedSetMode('image')}
