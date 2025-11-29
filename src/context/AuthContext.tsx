@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   onAuthStateChanged,
@@ -60,15 +61,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      if (user) {
-        await refreshSubscription();
-      }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [refreshSubscription]);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      refreshSubscription();
+    }
+  }, [user, refreshSubscription]);
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();

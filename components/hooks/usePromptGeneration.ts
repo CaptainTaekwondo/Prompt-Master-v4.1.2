@@ -6,7 +6,7 @@ import { assembleVideoPrompt, SelectedItem as VideoSelectedItem } from '../../se
 
 import { PLATFORMS_DATA } from '../constants.ts';
 import { translations } from '../../translations.ts';
-import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform } from '../../types.ts';
+import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings } from '../../types.ts';
 
 type TranslationKeys = keyof typeof translations['en'];
 
@@ -25,7 +25,7 @@ const initialProTextSettings: ProfessionalTextSettings = {
     paperSize: 'A4',
     fontSize: 12,
     pageSettings: { count: 500, type: 'words' },
-    authorInfo: { name: '', title: 'none', language: 'en', repeatOnEveryPage: false, placement: { macro: 'footer', horizontal: 'right' }, placementSetByUser: false },
+    authorInfo: { name: '', title: 'none', language: 'en', repeatOnEveryPage: false, placement: { macro: 'footer', micro: 'right' } },
 };
 
 export function usePromptGeneration({
@@ -71,6 +71,19 @@ export function usePromptGeneration({
     const [processingLabelKey, setProcessingLabelKey] = useState<TranslationKeys | null>(null);
     const [isEnhancedText, setIsEnhancedText] = useState(false);
     const [placeholderText, setPlaceholderText] = useState('');
+    const [generationCost, setGenerationCost] = useState(10);
+
+    useEffect(() => {
+        let cost = 10;
+        if (mode === 'image') {
+            cost = 10;
+        } else if (mode === 'video') {
+            cost = 20;
+        } else if (mode === 'text') {
+            cost = 30;
+        }
+        setGenerationCost(cost);
+    }, [mode]);
     
     useEffect(() => {
         setProTextSettings(prev => ({ ...prev, authorInfo: { ...prev.authorInfo, language }}));
@@ -110,17 +123,8 @@ export function usePromptGeneration({
     
     const handleGenerate = async () => {
         if (!userInput) { setErrorKey('errorEnterIdea'); return; }
-        
-        let cost = 0;
-        if (mode === 'image') {
-            cost = 10;
-        } else if (mode === 'video') {
-            cost = 20;
-        } else if (mode === 'text') {
-            cost = 30;
-        }
 
-        if (!checkAndDeductCoins(cost)) return;
+        if (!checkAndDeductCoins(generationCost)) return;
         
         setIsProcessing(true);
         setProcessingLabelKey('generatingButton');
@@ -130,10 +134,10 @@ export function usePromptGeneration({
         let platform: Platform | undefined;
 
         if (mode === 'image') {
-            // Fix for type error: `value` is inferred as `unknown`. Casting to `string` to match `SelectedItem` type.
-            const selectedItems: ImageSelectedItem[] = Object.entries(settings)
+            const imageSettings = settings as ImagePromptSettings;
+            const selectedItems: ImageSelectedItem[] = Object.entries(imageSettings)
                 .filter(([_, value]) => value !== 'default')
-                .map(([key, value]) => ({ key: value as string, category: key }));
+                .map(([key, value]) => ({ key: value, category: key }));
             
             finalPrompt = await assembleImagePrompt({
                 userDescription: userInput,
@@ -145,10 +149,10 @@ export function usePromptGeneration({
             platform = PLATFORMS_DATA.image.find(p => p.name === selectedPlatformName);
 
         } else if (mode === 'video') {
-             // Fix for type error: `value` is inferred as `unknown`. Casting to `string` to match `SelectedItem` type.
-             const selectedItems: VideoSelectedItem[] = Object.entries(settings)
+             const videoSettings = settings as VideoPromptSettings;
+             const selectedItems: VideoSelectedItem[] = Object.entries(videoSettings)
                 .filter(([_, value]) => value !== 'default')
-                .map(([key, value]) => ({ key: value as string, category: key }));
+                .map(([key, value]) => ({ key: value, category: key }));
             
             finalPrompt = await assembleVideoPrompt({
                 userDescription: userInput,
@@ -201,6 +205,7 @@ export function usePromptGeneration({
         processingLabelKey,
         isEnhancedText, setIsEnhancedText,
         placeholderText,
+        generationCost,
         handleGenerate,
         handleGetNewIdea,
     };
