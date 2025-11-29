@@ -1,6 +1,5 @@
 
 import React, { useState, useMemo } from 'react';
-// Import ImagePromptComponents type
 import type { PromptSettings, GenerationMode, ProfessionalTextSettings, ImagePromptComponents } from '../types.ts';
 import { Card } from './Card.tsx';
 import { 
@@ -22,7 +21,6 @@ import { Tooltip } from './Tooltip.tsx';
 
 type Translations = typeof translations['en'];
 
-// Update props interface to accept imageComponents
 interface SettingsPanelProps {
   settings: PromptSettings;
   setSettings: React.Dispatch<React.SetStateAction<PromptSettings>>;
@@ -34,7 +32,7 @@ interface SettingsPanelProps {
   setSelectedPlatformName: (name: string) => void;
   t: Translations;
   setPage: (page: string) => void;
-  imageComponents: ImagePromptComponents | null; // Add new prop
+  imageComponents: ImagePromptComponents | null;
 }
 
 const CustomSelect: React.FC<{
@@ -62,7 +60,6 @@ const CustomSelect: React.FC<{
   </div>
 );
 
-// Update ImageVideoSettings to accept and use imageComponents
 const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 'setProTextSettings'>> = ({ settings, setSettings, mode, selectedPlatformName, setSelectedPlatformName, t, setPage, imageComponents }) => {
   
   const dynamicVideoOptions = useMemo(() => getVideoOptionsForPurpose(settings.videoPurpose), [settings.videoPurpose]);
@@ -100,7 +97,7 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
     }
   };
 
-  type TranslationOptionKey = 'style' | 'videoStyle' | 'lighting' | 'videoLighting' | 'composition' | 'cameraShot' | 'cameraMovement' | 'fashionEra' | 'videoEffect' | 'aspectRatio' | 'quality' | 'videoPurpose' | 'videoDuration';
+  type TranslationOptionKey = 'videoStyle' | 'lighting' | 'videoLighting' | 'composition' | 'cameraShot' | 'cameraMovement' | 'fashionEra' | 'videoEffect' | 'aspectRatio' | 'quality' | 'videoPurpose' | 'videoDuration' | 'style';
   const translatedOptions = (options: readonly {value: string, label: string}[] | readonly string[], translationKey: TranslationOptionKey) => {
     const translationObject = t[translationKey] as Record<string, string>;
     return options.map(opt => {
@@ -111,54 +108,58 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
     });
   };
   
-  type TooltipCategory = 'platforms' | 'styles' | 'videoStyles' | 'lightings' | 'videoLightings' | 'compositions' | 'cameraShots' | 'aspectRatios' | 'qualities';
+  type TooltipCategory = 'platforms' | 'styles' | 'videoStyles' | 'lightings' | 'videoLightings' | 'compositions' | 'cameraShots' | 'aspectRatios' | 'qualities' | 'specialStyles';
 
-  const getTooltipText = (category: TooltipCategory, value: string): string => {
+  const getTooltipText = (category: TooltipCategory, value: string): string | undefined => {
     const generalTooltipKey = category.slice(0, -1) as keyof typeof t.tooltips;
-    const specificTooltips = t.tooltips[category] as Record<string, string> | undefined;
     
+    if (category === 'specialStyles') {
+        const specialStyleTooltips = t.tooltips.specialStyles as Record<string, { label: string; description: string }>;
+        return specialStyleTooltips[value]?.description;
+    }
+
+    const specificTooltips = t.tooltips[category] as Record<string, string> | undefined;
     const generalTooltip = t.tooltips[generalTooltipKey as keyof typeof t.tooltips];
-    return specificTooltips?.[value] || (typeof generalTooltip === 'string' ? generalTooltip : '') || '';
+
+    if (specificTooltips && specificTooltips[value]) {
+        return specificTooltips[value];
+    }
+    if (typeof generalTooltip === 'string') {
+        return generalTooltip;
+    }
+    return '';
   }
 
-  // Memoize the selected style's description for display
   const selectedStyleDescription = useMemo(() => {
-    if (mode !== 'image' || !imageComponents?.styles || !settings.selectedStyle || settings.selectedStyle === 'none') {
-      return null;
-    }
-    const style = imageComponents.styles.find(s => s.id === settings.selectedStyle);
-    return style?.description || null;
-  }, [settings.selectedStyle, imageComponents, mode]);
+    return getTooltipText('specialStyles', settings.style);
+  }, [settings.style, t]);
 
-  // Memoize the options for the new style dropdown
   const styleOptions = useMemo(() => {
-    const baseOptions = [{ value: 'none', label: t.styleOptionNone || 'None' }];
-    if (!imageComponents?.styles) {
-        return baseOptions;
-    }
-    const dynamicStyles = imageComponents.styles.map(style => ({
+    if (!imageComponents?.styles) return [];
+    
+    const specialStyleLabels = t.tooltips.specialStyles as Record<string, { label: string; description: string }>;
+
+    return imageComponents.styles.map(style => ({
         value: style.id,
-        label: style.label,
+        label: specialStyleLabels[style.id]?.label || style.label,
     }));
-    return [...baseOptions, ...dynamicStyles];
-}, [imageComponents, t.styleOptionNone]);
+  }, [imageComponents, t]);
 
 
   return (
     <div className="space-y-4">
       {mode === 'image' ? (
           <>
-            {/* New "Style" dropdown */}
             <div>
               <CustomSelect
-                label={t.specialStyleLabel || "الاستايل"}
-                tooltip={"Select a special artistic style to apply to your image."}
-                value={settings.selectedStyle || 'none'}
-                onChange={handleSettingChange('selectedStyle')}
+                label={t.styleLabel}
+                tooltip={t.tooltips.style}
+                value={settings.style}
+                onChange={handleSettingChange('style')}
                 options={styleOptions}
                 className="mb-2"
               />
-              {selectedStyleDescription && (
+              {settings.style !== 'none' && selectedStyleDescription && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-black/20 p-2 rounded-md">
                   {selectedStyleDescription}
                 </p>
@@ -178,21 +179,14 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
                     options={PLATFORMS_DATA.image.map(p => ({ value: p.name, label: p.name }))}
                 />
                 <CustomSelect
-                    label={t.styleLabel}
-                    tooltip={getTooltipText('styles', settings.style)}
-                    value={settings.style}
-                    onChange={handleSettingChange('style')}
-                    options={translatedOptions(BASE_IMAGE_STYLES, 'style')}
-                />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-                <CustomSelect
                     label={t.lightingLabel}
                     tooltip={getTooltipText('lightings', settings.lighting)}
                     value={settings.lighting}
                     onChange={handleSettingChange('lighting')}
                     options={translatedOptions(BASE_IMAGE_LIGHTING, 'lighting')}
                 />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
                 <CustomSelect
                     label={t.compositionLabel}
                     tooltip={getTooltipText('compositions', settings.composition)}
@@ -334,9 +328,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
 
   const wrappedSetMode: typeof props.setMode = (value) => {
     if (mode !== value) {
-        setSettings(prev => ({
-            ...prev,
-            style: 'default',
+        // Reset settings when switching mode
+        const newSettings: Partial<PromptSettings> = {
+            style: 'none', 
             lighting: 'default',
             composition: 'default',
             cameraShot: 'default',
@@ -345,7 +339,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
             videoEffect: 'default',
             videoPurpose: 'default',
             videoDuration: 'short',
-            selectedStyle: 'none', // Reset selectedStyle on mode change
+        };
+
+        setSettings(prev => ({
+            ...prev,
+            ...newSettings,
         }));
     }
     props.setMode(value);
