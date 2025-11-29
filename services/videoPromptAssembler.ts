@@ -18,7 +18,7 @@ async function getComponents(platformName: string): Promise<VideoPromptComponent
     }
     
     try {
-        const response = await fetch(`../data/${fileName}`);
+        const response = await fetch(`./data/${fileName}`);
         if (!response.ok) {
             if (response.status === 404 && fileName !== 'local_video_prompt_components.json') {
                 console.warn(`Specific prompt file for ${platformName} not found, falling back to default.`);
@@ -31,10 +31,13 @@ async function getComponents(platformName: string): Promise<VideoPromptComponent
         return data;
     } catch (error) {
         console.error(`Failed to fetch ${fileName}:`, error);
-        throw new Error("Could not load video prompt components data.");
+        if (fileName !== 'local_video_prompt_components.json') {
+            console.warn('Falling back to default components due to error.');
+            return getComponents('default');
+        }
+        throw new Error("Could not load critical video prompt components data.");
     }
 }
-
 
 export interface SelectedItem {
   key: string;
@@ -52,65 +55,78 @@ export const assembleVideoPrompt = async ({
     selectedItems,
     platformName
 }: AssembleVideoPromptArgs): Promise<string> => {
-    console.log(`--- [VideoPromptAssembler v2.0 - Adaptive Workflow] Execution Start for ${platformName} ---`);
-    const components = await getComponents(platformName);
+    console.log(`--- [VideoPromptAssembler v2.1 - Robust] Execution Start for ${platformName} ---`);
 
-    // Simplified Workflow for generalist platforms
-    if (components.workflow && components.workflow.type === 'simple') {
+    try {
+        const components = await getComponents(platformName);
+
+        // Simplified Workflow for certain platforms
+        if (components.workflow?.type === 'simple') {
+            const specParts = selectedItems
+                .map(item => (components[item.category] as Record<string, string>)?.[item.key])
+                .filter(Boolean);
+            
+            let simplePrompt = `${userDescription}, ${specParts.join(', ')}`;
+            console.log(`[VideoPromptAssembler] Using SIMPLIFIED workflow for ${platformName}.`);
+            return simplePrompt;
+        }
+
+        // Advanced "Simulated Professional Workflow"
+        console.log(`[VideoPromptAssembler] Using ADVANCED workflow for ${platformName}.`);
+        const rolePlay = (components.identity?.default || '').replace('{platform}', platformName);
+        const qaHeader = components.qualityAssuranceChecklist?.header || '';
+        const planning = components.internalPlanningPhase?.default || '';
+        const review = components.criticalReviewPhase?.default || '';
+        const finalRender = components.finalRenderCommand?.default || '';
+        const negativePrompts = (components.negativePrompts as Record<string, string>)?.[platformName] || components.negativePrompts?.default || '';
+
+        const promptParts: string[] = [rolePlay, qaHeader].filter(Boolean);
+
+        const checklistItems: string[] = [];
+        if (components.qualityAssuranceChecklist) {
+            selectedItems.forEach(item => {
+                const checkTemplate = components.qualityAssuranceChecklist[item.category];
+                if (checkTemplate && typeof checkTemplate === 'string') {
+                    checklistItems.push(checkTemplate.replace('{value}', item.key));
+                }
+            });
+        }
+        if(checklistItems.length > 0) {
+            promptParts.push(checklistItems.join('\\n'));
+        }
+
+        promptParts.push(
+            '\\n' + planning,
+            review,
+            '\\n### [PROMPT SPECIFICATIONS]',
+        );
+
         const specParts = selectedItems
             .map(item => (components[item.category] as Record<string, string>)?.[item.key])
             .filter(Boolean);
+
+        let mainPrompt = `${userDescription}, ${specParts.join(', ')}`;
         
-        let simplePrompt = `${userDescription}, ${specParts.join(', ')}`;
-        console.log(`[VideoPromptAssembler] Using SIMPLIFIED workflow for ${platformName}.`);
-        return simplePrompt;
-    }
-
-    // Advanced Workflow for top-tier platforms
-    console.log(`[VideoPromptAssembler] Using ADVANCED workflow for ${platformName}.`);
-    const rolePlay = (components.identity.default || '').replace('{platform}', platformName);
-    const qaHeader = components.qualityAssuranceChecklist.header || '';
-    const planning = components.internalPlanningPhase.default || '';
-    const review = components.criticalReviewPhase.default || '';
-    const finalRender = components.finalRenderCommand.default || '';
-    const negativePrompts = (components.negativePrompts as Record<string, string>)[platformName] || components.negativePrompts.default || '';
-
-    const promptParts: string[] = [rolePlay, qaHeader];
-
-    const checklistItems: string[] = [];
-    selectedItems.forEach(item => {
-        const check = components.qualityAssuranceChecklist[item.category];
-        if (check) {
-            checklistItems.push(check.replace('{value}', item.key));
+        // **FIXED**: Safely access platformSyntax
+        if (components.platformSyntax && typeof components.platformSyntax === 'object' && platformName in components.platformSyntax) {
+            const platformSyntaxString = (components.platformSyntax as Record<string, string>)[platformName];
+            const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '16:9';
+            mainPrompt += platformSyntaxString.replace('{aspectRatio}', aspectRatio);
         }
-    });
-    promptParts.push(checklistItems.join('\n'));
 
-    promptParts.push(
-        '\n' + planning,
-        review,
-        '\n### [PROMPT SPECIFICATIONS]',
-    );
+        promptParts.push(mainPrompt);
+        promptParts.push('\\n' + negativePrompts);
+        promptParts.push('\\n' + finalRender);
+        
+        const finalPrompt = promptParts.join('\\n\\n').trim();
+        console.log(`[VideoPromptAssembler] Final Assembled Prompt for ${platformName}: \"${finalPrompt}\"`);
+        console.log('--- [VideoPromptAssembler v2.1] Execution End ---');
+        
+        return finalPrompt;
 
-    const specParts = selectedItems
-        .map(item => (components[item.category] as Record<string, string>)?.[item.key])
-        .filter(Boolean);
-
-    let mainPrompt = `${userDescription}, ${specParts.join(', ')}`;
-    
-    const platformSyntax = components.platformSyntax[platformName];
-    if (platformSyntax) {
-        const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '16:9';
-        mainPrompt += platformSyntax.replace('{aspectRatio}', aspectRatio);
+    } catch (error) {
+        console.error(`[VideoPromptAssembler] CRITICAL ERROR during prompt assembly for ${platformName}:`, error);
+        const basicSpecs = selectedItems.map(i => i.key).join(', ');
+        return `A video of ${userDescription}, ${basicSpecs}.`;
     }
-
-    promptParts.push(mainPrompt);
-    promptParts.push('\n' + negativePrompts);
-    promptParts.push('\n' + finalRender);
-    
-    const finalPrompt = promptParts.join('\n\n');
-    console.log(`[VideoPromptAssembler] Final Assembled Prompt for ${platformName}: "${finalPrompt}"`);
-    console.log('--- [VideoPromptAssembler v2.0] Execution End ---');
-    
-    return finalPrompt;
 };

@@ -19,9 +19,8 @@ async function getComponents(platformName: string): Promise<ImagePromptComponent
     }
     
     try {
-        const response = await fetch(`../data/${fileName}`);
+        const response = await fetch(`./data/${fileName}`);
         if (!response.ok) {
-            // Fallback to the main components file if a specific one isn't found
             if (response.status === 404 && fileName !== 'local_image_prompt_components.json') {
                 console.warn(`Specific prompt file for ${platformName} not found, falling back to default.`);
                 return getComponents('default'); 
@@ -33,7 +32,12 @@ async function getComponents(platformName: string): Promise<ImagePromptComponent
         return data;
     } catch (error) {
         console.error(`Failed to fetch ${fileName}:`, error);
-        throw new Error("Could not load image prompt components data.");
+        // Fallback to default components if any error occurs
+        if (fileName !== 'local_image_prompt_components.json') {
+            console.warn('Falling back to default components due to error.');
+            return getComponents('default');
+        }
+        throw new Error("Could not load critical image prompt components data.");
     }
 }
 
@@ -65,77 +69,89 @@ export const assembleImagePrompt = async ({
     faceDescription,
     platformName
 }: AssembleImagePromptArgs): Promise<string> => {
-    console.log(`--- [ImagePromptAssembler v2.0 - Adaptive Workflow] Execution Start for ${platformName} ---`);
-    const components = await getComponents(platformName);
+    console.log(`--- [ImagePromptAssembler v2.1 - Robust] Execution Start for ${platformName} ---`);
     
-    let finalDescription = userDescription;
-    if (faceSwapEnabled && faceDescription) {
-        finalDescription = `A photorealistic portrait of a person with these features: (${faceDescription}), ${userDescription}`;
-    }
-
-    // Check if we are using a simplified or advanced workflow
-    if (components.workflow && components.workflow.type === 'simple') {
-        const specParts = selectedItems
-            .map(item => (components[item.category] as Record<string, string>)?.[item.key])
-            .filter(Boolean);
+    // Use a try-catch block to gracefully handle failures during component loading or assembly
+    try {
+        const components = await getComponents(platformName);
         
-        let simplePrompt = `${finalDescription}, ${specParts.join(', ')}`;
-        console.log(`[ImagePromptAssembler] Using SIMPLIFIED workflow for ${platformName}.`);
-        return simplePrompt;
-    }
-
-    // Advanced "Simulated Professional Workflow" for top-tier platforms
-    console.log(`[ImagePromptAssembler] Using ADVANCED workflow for ${platformName}.`);
-    const rolePlay = getPlatformSyntax(components.identity.default, platformName);
-    const qaHeader = getPlatformSyntax(components.qualityAssuranceChecklist.header, platformName);
-    const planning = getPlatformSyntax(components.internalPlanningPhase.default, platformName);
-    const review = getPlatformSyntax(components.criticalReviewPhase.default, platformName);
-    const finalRender = getPlatformSyntax(components.finalRenderCommand.default, platformName);
-    const negativePrompts = getPlatformSyntax(components.negativePrompts.default, platformName);
-
-    const promptParts: string[] = [
-        rolePlay.replace('{platform}', platformName),
-        qaHeader,
-    ];
-    
-    const checklistItems: string[] = [];
-    selectedItems.forEach(item => {
-        const check = components.qualityAssuranceChecklist[item.category];
-        if (check && typeof check === 'string') {
-            checklistItems.push(getPlatformSyntax(check.replace('{value}', item.key), platformName));
+        let finalDescription = userDescription;
+        if (faceSwapEnabled && faceDescription) {
+            finalDescription = `A photorealistic portrait of a person with these features: (${faceDescription}), ${userDescription}`;
         }
-    });
-    promptParts.push(checklistItems.join('\n'));
 
-    promptParts.push(
-        '\n' + planning,
-        review,
-        '\n### [PROMPT SPECIFICATIONS]',
-    );
+        // Simplified workflow for platforms like Grok/Copilot
+        if (components.workflow && components.workflow.type === 'simple') {
+            const specParts = selectedItems
+                .map(item => (components[item.category] as Record<string, string>)?.[item.key])
+                .filter(Boolean);
+            
+            let simplePrompt = `${finalDescription}, ${specParts.join(', ')}`;
+            console.log(`[ImagePromptAssembler] Using SIMPLIFIED workflow for ${platformName}.`);
+            return simplePrompt;
+        }
 
-    const specParts = selectedItems
-        .map(item => {
-            const component = components[item.category]?.[item.key];
-            if (!component) return null;
-            return getPlatformSyntax(component, platformName);
-        })
-        .filter(Boolean);
+        // Advanced "Simulated Professional Workflow" for top-tier platforms
+        console.log(`[ImagePromptAssembler] Using ADVANCED workflow for ${platformName}.`);
+        const rolePlay = getPlatformSyntax(components.identity?.default, platformName);
+        const qaHeader = getPlatformSyntax(components.qualityAssuranceChecklist?.header, platformName);
+        const planning = getPlatformSyntax(components.internalPlanningPhase?.default, platformName);
+        const review = getPlatformSyntax(components.criticalReviewPhase?.default, platformName);
+        const finalRender = getPlatformSyntax(components.finalRenderCommand?.default, platformName);
+        const negativePrompts = getPlatformSyntax(components.negativePrompts?.default, platformName);
 
-    let mainPrompt = `${finalDescription}, ${specParts.join(', ')}`;
-    
-    const platformSyntax = (components.platformSyntax as Record<string, string>)[platformName];
-    if (platformSyntax) {
-        const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '1:1';
-        mainPrompt += platformSyntax.replace('{aspectRatio}', aspectRatio);
+        const promptParts: string[] = [
+            rolePlay.replace('{platform}', platformName),
+            qaHeader,
+        ];
+        
+        const checklistItems: string[] = [];
+        if (components.qualityAssuranceChecklist) {
+            selectedItems.forEach(item => {
+                const checkTemplate = components.qualityAssuranceChecklist[item.category];
+                if (checkTemplate && typeof checkTemplate === 'string') {
+                    checklistItems.push(getPlatformSyntax(checkTemplate.replace('{value}', item.key), platformName));
+                }
+            });
+        }
+        promptParts.push(checklistItems.join('\\n'));
+
+        promptParts.push(
+            '\\n' + planning,
+            review,
+            '\\n### [PROMPT SPECIFICATIONS]',
+        );
+
+        const specParts = selectedItems
+            .map(item => {
+                const component = components[item.category]?.[item.key];
+                return component ? getPlatformSyntax(component, platformName) : null;
+            })
+            .filter(Boolean);
+
+        let mainPrompt = `${finalDescription}, ${specParts.join(', ')}`;
+        
+        // **FIXED**: Safely access platformSyntax
+        if (components.platformSyntax && typeof components.platformSyntax === 'object' && platformName in components.platformSyntax) {
+            const platformSyntaxString = (components.platformSyntax as Record<string, string>)[platformName];
+            const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '1:1';
+            mainPrompt += platformSyntaxString.replace('{aspectRatio}', aspectRatio);
+        }
+
+        promptParts.push(mainPrompt);
+        promptParts.push('\\n' + negativePrompts);
+        promptParts.push('\\n' + finalRender);
+        
+        const finalPrompt = promptParts.join('\\n\\n').trim();
+        console.log(`[ImagePromptAssembler] Final Assembled Prompt for ${platformName}: "${finalPrompt}"`);
+        console.log('--- [ImagePromptAssembler v2.1] Execution End ---');
+        
+        return finalPrompt;
+
+    } catch (error) {
+        console.error(`[ImagePromptAssembler] CRITICAL ERROR during prompt assembly for ${platformName}:`, error);
+        // Fallback to a very simple prompt structure to ensure the app doesn't crash
+        const basicSpecs = selectedItems.map(i => i.key).join(', ');
+        return `An image of ${userDescription}, in the style of ${basicSpecs}.`;
     }
-
-    promptParts.push(mainPrompt);
-    promptParts.push('\n' + negativePrompts);
-    promptParts.push('\n' + finalRender);
-    
-    const finalPrompt = promptParts.join('\n\n');
-    console.log(`[ImagePromptAssembler] Final Assembled Prompt for ${platformName}: "${finalPrompt}"`);
-    console.log('--- [ImagePromptAssembler v2.0] Execution End ---');
-    
-    return finalPrompt;
 };
