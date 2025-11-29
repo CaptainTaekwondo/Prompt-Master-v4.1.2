@@ -10,6 +10,24 @@ import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextS
 
 type TranslationKeys = keyof typeof translations['en'];
 
+const initialSettings: PromptSettings = {
+    imagePurpose: 'default',
+    style: 'default',
+    lighting: 'default',
+    composition: 'default',
+    cameraAngle: 'default',
+    mood: 'default',
+    colorPalette: 'default',
+    aspectRatio: '1:1',
+    quality: 'default',
+    cameraShot: 'default',
+    cameraMovement: 'default', 
+    fashionEra: 'default',
+    videoEffect: 'default',
+    videoPurpose: 'default',
+    videoDuration: 'short',
+};
+
 const initialProTextSettings: ProfessionalTextSettings = {
     writingIdentity: 'default',
     purpose: 'normal',
@@ -47,23 +65,7 @@ export function usePromptGeneration({
 }) {
     const [userInput, setUserInput] = useState('');
     const [mode, setMode] = useState<GenerationMode>('image');
-    const [settings, setSettings] = useState<PromptSettings>({
-        imagePurpose: 'default',
-        style: 'default',
-        lighting: 'default',
-        composition: 'default',
-        cameraAngle: 'default',
-        mood: 'default',
-        colorPalette: 'default',
-        aspectRatio: '1:1',
-        quality: 'default',
-        cameraShot: 'default',
-        cameraMovement: 'default', 
-        fashionEra: 'default',
-        videoEffect: 'default',
-        videoPurpose: 'default',
-        videoDuration: 'short',
-    });
+    const [settings, setSettings] = useState<PromptSettings>(initialSettings);
     const [proTextSettings, setProTextSettings] = useState<ProfessionalTextSettings>({ ...initialProTextSettings, authorInfo: { ...initialProTextSettings.authorInfo, language }});
     const [selectedPlatformName, setSelectedPlatformName] = useState<string>('General Mode');
     const [generatedResult, setGeneratedResult] = useState<GeneratedPrompt | null>(null);
@@ -103,6 +105,7 @@ export function usePromptGeneration({
     useEffect(() => {
         setSelectedPlatformName(PLATFORMS_DATA[mode]?.[0]?.name || 'General Mode');
         setGeneratedResult(null);
+        setSettings(initialSettings); // RESET state to prevent setting conflicts
     }, [mode]);
 
     const handleGetNewIdea = useCallback(() => {
@@ -136,8 +139,8 @@ export function usePromptGeneration({
         if (mode === 'image') {
             const imageSettings = settings as ImagePromptSettings;
             const selectedItems: ImageSelectedItem[] = Object.entries(imageSettings)
-                .filter(([_, value]) => value !== 'default')
-                .map(([key, value]) => ({ key: value, category: key }));
+                .filter(([_, value]) => value !== 'default' && value) // Ensure value is not 'default' or empty
+                .map(([key, value]) => ({ key: value as string, category: key }));
             
             finalPrompt = await assembleImagePrompt({
                 userDescription: userInput,
@@ -151,8 +154,8 @@ export function usePromptGeneration({
         } else if (mode === 'video') {
              const videoSettings = settings as VideoPromptSettings;
              const selectedItems: VideoSelectedItem[] = Object.entries(videoSettings)
-                .filter(([_, value]) => value !== 'default')
-                .map(([key, value]) => ({ key: value, category: key }));
+                .filter(([_, value]) => value !== 'default' && value) // Ensure value is not 'default' or empty
+                .map(([key, value]) => ({ key: value as string, category: key }));
             
             finalPrompt = await assembleVideoPrompt({
                 userDescription: userInput,

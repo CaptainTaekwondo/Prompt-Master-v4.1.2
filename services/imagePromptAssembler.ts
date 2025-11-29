@@ -32,7 +32,6 @@ async function getComponents(platformName: string): Promise<ImagePromptComponent
         return data;
     } catch (error) {
         console.error(`Failed to fetch ${fileName}:`, error);
-        // Fallback to default components if any error occurs
         if (fileName !== 'local_image_prompt_components.json') {
             console.warn('Falling back to default components due to error.');
             return getComponents('default');
@@ -69,9 +68,8 @@ export const assembleImagePrompt = async ({
     faceDescription,
     platformName
 }: AssembleImagePromptArgs): Promise<string> => {
-    console.log(`--- [ImagePromptAssembler v2.1 - Robust] Execution Start for ${platformName} ---`);
+    console.log(`--- [ImagePromptAssembler v2.2 - Robust] Execution Start for ${platformName} ---`);
     
-    // Use a try-catch block to gracefully handle failures during component loading or assembly
     try {
         const components = await getComponents(platformName);
         
@@ -80,7 +78,6 @@ export const assembleImagePrompt = async ({
             finalDescription = `A photorealistic portrait of a person with these features: (${faceDescription}), ${userDescription}`;
         }
 
-        // Simplified workflow for platforms like Grok/Copilot
         if (components.workflow && components.workflow.type === 'simple') {
             const specParts = selectedItems
                 .map(item => (components[item.category] as Record<string, string>)?.[item.key])
@@ -91,7 +88,6 @@ export const assembleImagePrompt = async ({
             return simplePrompt;
         }
 
-        // Advanced "Simulated Professional Workflow" for top-tier platforms
         console.log(`[ImagePromptAssembler] Using ADVANCED workflow for ${platformName}.`);
         const rolePlay = getPlatformSyntax(components.identity?.default, platformName);
         const qaHeader = getPlatformSyntax(components.qualityAssuranceChecklist?.header, platformName);
@@ -131,7 +127,6 @@ export const assembleImagePrompt = async ({
 
         let mainPrompt = `${finalDescription}, ${specParts.join(', ')}`;
         
-        // **FIXED**: Safely access platformSyntax
         if (components.platformSyntax && typeof components.platformSyntax === 'object' && platformName in components.platformSyntax) {
             const platformSyntaxString = (components.platformSyntax as Record<string, string>)[platformName];
             const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '1:1';
@@ -144,14 +139,15 @@ export const assembleImagePrompt = async ({
         
         const finalPrompt = promptParts.join('\\n\\n').trim();
         console.log(`[ImagePromptAssembler] Final Assembled Prompt for ${platformName}: "${finalPrompt}"`);
-        console.log('--- [ImagePromptAssembler v2.1] Execution End ---');
+        console.log('--- [ImagePromptAssembler v2.2] Execution End ---');
         
         return finalPrompt;
 
     } catch (error) {
         console.error(`[ImagePromptAssembler] CRITICAL ERROR during prompt assembly for ${platformName}:`, error);
-        // Fallback to a very simple prompt structure to ensure the app doesn't crash
-        const basicSpecs = selectedItems.map(i => i.key).join(', ');
-        return `An image of ${userDescription}, in the style of ${basicSpecs}.`;
+        const selectedStyles = selectedItems.map(i => i.key).join(', ');
+        const fallbackPrompt = `Create a high-quality image of ${userDescription}. Style influences: ${selectedStyles}. Ensure the image is visually appealing and respects all specified details.`;
+        console.warn(`[ImagePromptAssembler] Using fallback prompt due to error: "${fallbackPrompt}"`);
+        return fallbackPrompt;
     }
 };
