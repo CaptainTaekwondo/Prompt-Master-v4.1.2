@@ -39,7 +39,7 @@ export const en: TranslationSchema = {
     textToggle: 'Professional Text',
     generateButton: 'Generate',
     generatingButton: 'Generating...',
-    costGenerate: 'Cost: 10',
+    costGenerate: 'Cost:',
     errorEnterIdea: 'Please enter an idea first.',
     errorSelectPlatform: 'Please select a valid platform.',
     errorFailedEnhance: 'Failed to enhance idea. Using a high-quality fallback.',

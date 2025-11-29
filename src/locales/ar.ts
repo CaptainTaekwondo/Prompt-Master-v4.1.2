@@ -39,7 +39,7 @@ export const ar: TranslationSchema = {
     textToggle: 'نص احترافي',
     generateButton: 'توليد',
     generatingButton: 'جارٍ التوليد...',
-    costGenerate: 'التكلفة: 10',
+    costGenerate: 'التكلفة:',
     errorEnterIdea: 'يرجى إدخال فكرة أولاً.',
     errorSelectPlatform: 'يرجى اختيار منصة صالحة.',
     errorFailedEnhance: 'فشل تحسين الفكرة. استخدام بديل عالي الجودة.',
