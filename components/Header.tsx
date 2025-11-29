@@ -89,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, slogan
                   >
                     <span className="text-xl ltr:ml-2 rtl:mr-2">🪙</span>
                     <span className="font-bold text-lg">
-                      {currentUserData?.coins ?? 0}
+                      {currentUserData?.proTier === 'gold' ? '∞' : currentUserData?.coins ?? 0}
                     </span>
                     <button 
                       onClick={openEarnCoinsModal}
