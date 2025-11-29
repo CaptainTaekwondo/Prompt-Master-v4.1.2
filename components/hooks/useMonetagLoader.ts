@@ -8,11 +8,11 @@ export function useMonetagLoader() {
 
     useEffect(() => {
         const scriptId = 'monetag-script';
-        let script = document.getElementById(scriptId) as HTMLScriptElement | null;
-
+        
         if (!isPremiumUser) {
-            if (!script) {
-                script = document.createElement('script');
+            // For non-premium users, add the script if it doesn't exist.
+            if (!document.getElementById(scriptId)) {
+                const script = document.createElement('script');
                 script.id = scriptId;
                 script.src = MONETAG_SCRIPT_SRC;
                 script.dataset.zone = '188606';
@@ -21,13 +21,13 @@ export function useMonetagLoader() {
                 document.body.appendChild(script);
             }
         } else {
-            if (script) {
-                script.remove();
-                // Reload the page to remove any injected ads
-                window.location.reload();
+            // For premium users, find and remove the script.
+            // We'll try to find it by ID and by SRC for robustness.
+            const scriptElement = document.getElementById(scriptId) || document.querySelector(`script[src="${MONETAG_SCRIPT_SRC}"]`);
+            
+            if (scriptElement) {
+                scriptElement.remove();
             }
         }
-
-        // No cleanup needed on unmount, as we want the script to stay if the user is not premium
     }, [isPremiumUser]);
 }
