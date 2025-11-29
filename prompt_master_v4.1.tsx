@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Header } from './components/Header.tsx';
 import { IdeaInput } from './components/IdeaInput.tsx';
@@ -64,6 +63,7 @@ export default function PromptV4_1() {
     handleGenerate,
     handleGetNewIdea,
     generationCost,
+    imageComponents, // Destructure imageComponents from the hook
   } = usePromptGeneration({
     setErrorKey,
     t,
@@ -216,7 +216,20 @@ export default function PromptV4_1() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               <div ref={ideaCardWrapperRef}><IdeaInput ref={textAreaRef} userInput={userInput} setUserInput={setUserInput} t={t} placeholderText={placeholderText} isEnhancedText={isEnhancedText} onTextChange={() => setIsEnhancedText(false)} mode={mode} isCardOnFire={isCardOnFire} onGetNewIdea={handleGetNewIdea} currentUser={currentUser} proTier={currentUserData?.proTier || null} language={language} /></div>
-              <SettingsPanel settings={settings} setSettings={setSettings} proTextSettings={proTextSettings} setProTextSettings={setProTextSettings} mode={mode} setMode={setMode} selectedPlatformName={selectedPlatformName} setSelectedPlatformName={setSelectedPlatformName} t={t} setPage={(p: string) => setPage(p as Page)} />
+              {/* Pass imageComponents down to the SettingsPanel */}
+              <SettingsPanel 
+                settings={settings} 
+                setSettings={setSettings} 
+                proTextSettings={proTextSettings} 
+                setProTextSettings={setProTextSettings} 
+                mode={mode} 
+                setMode={setMode} 
+                selectedPlatformName={selectedPlatformName} 
+                setSelectedPlatformName={setSelectedPlatformName} 
+                t={t} 
+                setPage={(p: string) => setPage(p as Page)}
+                imageComponents={imageComponents} // Pass the prop here
+              />
               <div className="text-center">
                 <button ref={generateButtonRef} onClick={handleGenerateClick} disabled={isProcessing || isLaunching || !userInput} className="w-full md:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-4 px-10 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center text-lg">
                   {isProcessing || isLaunching ? (

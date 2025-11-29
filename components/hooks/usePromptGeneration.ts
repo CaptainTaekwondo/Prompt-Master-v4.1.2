@@ -6,7 +6,8 @@ import { assembleVideoPrompt, SelectedItem as VideoSelectedItem } from '../../se
 
 import { PLATFORMS_DATA } from '../constants.ts';
 import { translations } from '../../translations.ts';
-import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings } from '../../types.ts';
+// Make sure to import the new types
+import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings, ImagePromptComponents } from '../../types.ts';
 
 type TranslationKeys = keyof typeof translations['en'];
 
@@ -26,6 +27,7 @@ const initialSettings: PromptSettings = {
     videoEffect: 'default',
     videoPurpose: 'default',
     videoDuration: 'short',
+    selectedStyle: 'none', // Add selectedStyle with a default value
 };
 
 const initialProTextSettings: ProfessionalTextSettings = {
@@ -74,6 +76,18 @@ export function usePromptGeneration({
     const [isEnhancedText, setIsEnhancedText] = useState(false);
     const [placeholderText, setPlaceholderText] = useState('');
     const [generationCost, setGenerationCost] = useState(10);
+    
+    // State to hold the loaded image prompt components from JSON
+    const [imageComponents, setImageComponents] = useState<ImagePromptComponents | null>(null);
+
+    // Effect to fetch image components data
+    useEffect(() => {
+        // Assuming the JSON file is in the public directory and accessible via this path
+        fetch('/data/local_image_prompt_components.json')
+            .then(res => res.json())
+            .then(data => setImageComponents(data))
+            .catch(err => console.error("Failed to load image prompt components:", err));
+    }, []);
 
     useEffect(() => {
         let cost = 10;
@@ -126,7 +140,6 @@ export function usePromptGeneration({
     
     const handleGenerate = async () => {
         if (!userInput) { setErrorKey('errorEnterIdea'); return; }
-
         if (!checkAndDeductCoins(generationCost)) return;
         
         setIsProcessing(true);
@@ -137,14 +150,22 @@ export function usePromptGeneration({
         let platform: Platform | undefined;
 
         if (mode === 'image') {
+            if (!imageComponents) {
+                console.error("Image components not loaded yet.");
+                setErrorKey('errorSomethingWentWrong'); // Or a more specific error key
+                setIsProcessing(false);
+                return;
+            }
             const imageSettings = settings as ImagePromptSettings;
             const selectedItems: ImageSelectedItem[] = Object.entries(imageSettings)
-                .filter(([_, value]) => value !== 'default' && value) // Ensure value is not 'default' or empty
+                .filter(([key, value]) => value !== 'default' && value && key !== 'selectedStyle') // Exclude selectedStyle from this list
                 .map(([key, value]) => ({ key: value as string, category: key }));
             
             finalPrompt = await assembleImagePrompt({
                 userDescription: userInput,
                 selectedItems,
+                components: imageComponents, // Pass all loaded components
+                selectedStyleId: imageSettings.selectedStyle, // Pass the ID of the selected style
                 faceSwapEnabled: false, 
                 faceDescription: null,
                 platformName: selectedPlatformName,
@@ -154,7 +175,7 @@ export function usePromptGeneration({
         } else if (mode === 'video') {
              const videoSettings = settings as VideoPromptSettings;
              const selectedItems: VideoSelectedItem[] = Object.entries(videoSettings)
-                .filter(([_, value]) => value !== 'default' && value) // Ensure value is not 'default' or empty
+                .filter(([_, value]) => value !== 'default' && value)
                 .map(([key, value]) => ({ key: value as string, category: key }));
             
             finalPrompt = await assembleVideoPrompt({
@@ -211,5 +232,6 @@ export function usePromptGeneration({
         generationCost,
         handleGenerate,
         handleGetNewIdea,
+        imageComponents, // Return the loaded components
     };
 }

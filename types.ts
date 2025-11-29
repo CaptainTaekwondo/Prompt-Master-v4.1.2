@@ -1,6 +1,39 @@
 
 export type GenerationMode = 'image' | 'video' | 'text';
 
+// This defines the structure of a single style entry in the JSON
+export interface Style {
+  id: string;
+  label: string;
+  description: string;
+  promptModule: string;
+}
+
+// This defines the overall structure of the local_image_prompt_components.json file
+export interface ImagePromptComponents {
+  workflow?: { // Add the optional workflow property
+    type: 'simple' | 'advanced';
+  };
+  identity: any; 
+  qualityAssuranceChecklist: any;
+  internalPlanningPhase: any;
+  criticalReviewPhase: any;
+  finalRenderCommand: any;
+  negativePrompts: any;
+  platformSyntax: any;
+  styles: Style[]; // Use the Style interface here
+  imagePurpose: any;
+  style: any;
+  lighting: any;
+  composition: any;
+  cameraAngle: any;
+  mood: any;
+  colorPalette: any;
+  quality: any;
+  aspectRatio: any;
+}
+
+
 export interface PromptSettings {
   imagePurpose: string;
   style: string;
@@ -18,6 +51,8 @@ export interface PromptSettings {
   videoEffect: string;
   videoPurpose: string;
   videoDuration: string;
+  // For the new styles dropdown
+  selectedStyle: string; 
 }
 
 export interface ProfessionalTextSettings {

@@ -1,61 +1,28 @@
 
-import type { PromptSettings } from '../types.ts';
+import type { ImagePromptComponents, Style } from '../types.ts'; // Import necessary types
 
-type PlatformSyntax = string | { base: string; midjourney?: string; dall_e_3?: string; };
-type ImagePromptComponents = Record<string, any>;
-
-const componentCache: Record<string, ImagePromptComponents> = {};
-
-async function getComponents(platformName: string): Promise<ImagePromptComponents> {
-    const simplifiedPlatforms = ['Grok', 'Copilot'];
-    let fileName = 'local_image_prompt_components.json'; // Default to advanced
-
-    if (simplifiedPlatforms.includes(platformName)) {
-        fileName = `${platformName.toLowerCase()}_image_prompt_components.json`;
-    }
-
-    if (componentCache[fileName]) {
-        return componentCache[fileName];
-    }
-    
-    try {
-        const response = await fetch(`./data/${fileName}`);
-        if (!response.ok) {
-            if (response.status === 404 && fileName !== 'local_image_prompt_components.json') {
-                console.warn(`Specific prompt file for ${platformName} not found, falling back to default.`);
-                return getComponents('default'); 
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        componentCache[fileName] = data;
-        return data;
-    } catch (error) {
-        console.error(`Failed to fetch ${fileName}:`, error);
-        if (fileName !== 'local_image_prompt_components.json') {
-            console.warn('Falling back to default components due to error.');
-            return getComponents('default');
-        }
-        throw new Error("Could not load critical image prompt components data.");
-    }
-}
+// The cache and getComponents function are no longer needed here.
 
 export interface SelectedItem {
   key: string;
   category: string;
 }
 
+// Update the arguments for the assembler function
 interface AssembleImagePromptArgs {
   userDescription: string;
   selectedItems: SelectedItem[];
+  components: ImagePromptComponents | null; // Pass in the loaded components
+  selectedStyleId: string | null; // Pass in the selected style ID
   faceSwapEnabled: boolean;
   faceDescription: string | null;
   platformName: string;
 }
 
-const getPlatformSyntax = (component: PlatformSyntax | undefined, platform: string): string => {
+const getPlatformSyntax = (component: any, platform: string): string => {
     if (!component) return '';
     if (typeof component === 'string') return component;
+    // This part handles platform-specific syntax if your components JSON is structured that way
     if (platform === 'Midjourney' && component.midjourney) return component.midjourney;
     if (platform === 'DALL-E 3' && component.dall_e_3) return component.dall_e_3;
     return component.base || '';
@@ -64,20 +31,28 @@ const getPlatformSyntax = (component: PlatformSyntax | undefined, platform: stri
 export const assembleImagePrompt = async ({ 
     userDescription, 
     selectedItems, 
+    components, // Receive components as an argument
+    selectedStyleId, // Receive selectedStyleId as an argument
     faceSwapEnabled,
     faceDescription,
     platformName
 }: AssembleImagePromptArgs): Promise<string> => {
-    console.log(`--- [ImagePromptAssembler v2.2 - Robust] Execution Start for ${platformName} ---`);
+    console.log(`--- [ImagePromptAssembler v2.3 - Style Enhanced] Execution Start for ${platformName} ---`);
     
+    // Check if components are loaded. If not, fallback.
+    if (!components) {
+        console.error(`[ImagePromptAssembler] CRITICAL ERROR: Components data is null.`);
+        const selectedStyles = selectedItems.map(i => i.key).join(', ');
+        return `Create a high-quality image of ${userDescription}. Style influences: ${selectedStyles}.`;
+    }
+
     try {
-        const components = await getComponents(platformName);
-        
         let finalDescription = userDescription;
         if (faceSwapEnabled && faceDescription) {
             finalDescription = `A photorealistic portrait of a person with these features: (${faceDescription}), ${userDescription}`;
         }
 
+        // Handle simple workflow platforms (Grok, Copilot)
         if (components.workflow && components.workflow.type === 'simple') {
             const specParts = selectedItems
                 .map(item => (components[item.category] as Record<string, string>)?.[item.key])
@@ -88,7 +63,42 @@ export const assembleImagePrompt = async ({
             return simplePrompt;
         }
 
+        // --- ADVANCED WORKFLOW ---
         console.log(`[ImagePromptAssembler] Using ADVANCED workflow for ${platformName}.`);
+
+        // 1. Find the selected style and its prompt module
+        let stylePromptModule = '';
+        if (selectedStyleId && selectedStyleId !== 'none') {
+            const selectedStyle = components.styles?.find(s => s.id === selectedStyleId);
+            if (selectedStyle && selectedStyle.promptModule) {
+                stylePromptModule = selectedStyle.promptModule;
+                console.log(`[ImagePromptAssembler] Applying special style: ${selectedStyle.label}`);
+            }
+        }
+
+        // 2. Assemble the main prompt content
+        const specParts = selectedItems
+            .map(item => {
+                const component = components[item.category]?.[item.key];
+                return component ? getPlatformSyntax(component, platformName) : null;
+            })
+            .filter(Boolean);
+
+        let mainPrompt = `${finalDescription}, ${specParts.join(', ')}`;
+
+        // 3. Prepend the style module to the main prompt
+        if (stylePromptModule) {
+            mainPrompt = `${stylePromptModule} ${mainPrompt}`;
+        }
+        
+        // 4. Add platform-specific syntax (like aspect ratio)
+        if (components.platformSyntax && typeof components.platformSyntax === 'object' && platformName in components.platformSyntax) {
+            const platformSyntaxString = (components.platformSyntax as Record<string, string>)[platformName];
+            const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '1:1';
+            mainPrompt += platformSyntaxString.replace('{aspectRatio}', aspectRatio);
+        }
+
+        // 5. Assemble the full prompt with role-playing, instructions, etc.
         const rolePlay = getPlatformSyntax(components.identity?.default, platformName);
         const qaHeader = getPlatformSyntax(components.qualityAssuranceChecklist?.header, platformName);
         const planning = getPlatformSyntax(components.internalPlanningPhase?.default, platformName);
@@ -96,11 +106,6 @@ export const assembleImagePrompt = async ({
         const finalRender = getPlatformSyntax(components.finalRenderCommand?.default, platformName);
         const negativePrompts = getPlatformSyntax(components.negativePrompts?.default, platformName);
 
-        const promptParts: string[] = [
-            rolePlay.replace('{platform}', platformName),
-            qaHeader,
-        ];
-        
         const checklistItems: string[] = [];
         if (components.qualityAssuranceChecklist) {
             selectedItems.forEach(item => {
@@ -110,36 +115,22 @@ export const assembleImagePrompt = async ({
                 }
             });
         }
-        promptParts.push(checklistItems.join('\\n'));
-
-        promptParts.push(
+        
+        const promptParts: string[] = [
+            rolePlay.replace('{platform}', platformName),
+            qaHeader,
+            checklistItems.join('\\n'),
             '\\n' + planning,
             review,
             '\\n### [PROMPT SPECIFICATIONS]',
-        );
-
-        const specParts = selectedItems
-            .map(item => {
-                const component = components[item.category]?.[item.key];
-                return component ? getPlatformSyntax(component, platformName) : null;
-            })
-            .filter(Boolean);
-
-        let mainPrompt = `${finalDescription}, ${specParts.join(', ')}`;
-        
-        if (components.platformSyntax && typeof components.platformSyntax === 'object' && platformName in components.platformSyntax) {
-            const platformSyntaxString = (components.platformSyntax as Record<string, string>)[platformName];
-            const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '1:1';
-            mainPrompt += platformSyntaxString.replace('{aspectRatio}', aspectRatio);
-        }
-
-        promptParts.push(mainPrompt);
-        promptParts.push('\\n' + negativePrompts);
-        promptParts.push('\\n' + finalRender);
+            mainPrompt, // Add the fully constructed main prompt here
+            '\\n' + negativePrompts,
+            '\\n' + finalRender
+        ];
         
         const finalPrompt = promptParts.join('\\n\\n').trim();
         console.log(`[ImagePromptAssembler] Final Assembled Prompt for ${platformName}: "${finalPrompt}"`);
-        console.log('--- [ImagePromptAssembler v2.2] Execution End ---');
+        console.log('--- [ImagePromptAssembler v2.3] Execution End ---');
         
         return finalPrompt;
 

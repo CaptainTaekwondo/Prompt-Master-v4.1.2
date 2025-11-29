@@ -34,6 +34,32 @@
     "Leonardo.Ai": ", aspect ratio {aspectRatio}",
     "Ideogram": " --ar {aspectRatio}"
   },
+  "styles": [
+    {
+      "id": "none",
+      "label": "بدون استايل إضافي",
+      "description": "لن يتم تطبيق أي استايل خاص، يتم استخدام الإعدادات الافتراضية فقط.",
+      "promptModule": ""
+    },
+    {
+      "id": "cinematic_teal_orange",
+      "label": "Cinematic Teal & Orange",
+      "description": "استايل سينمائي يضيف تباينًا لونياً بين الأزرق السماوي والبرتقالي لإحساس درامي عميق في الصورة.",
+      "promptModule": "cinematic teal-and-orange color grading, dramatic lighting, shallow depth of field, soft film look, shot on 35mm lens, high dynamic range, subtle film grain"
+    },
+    {
+      "id": "moody_dark",
+      "label": "Moody Dark",
+      "description": "استايل مظلم ودرامي يعتمد على الظلال العميقة والألوان الهادئة، مثالي للبورتريه والأجواء الشتوية.",
+      "promptModule": "moody low-key photo style, deep shadows, soft directional light, desaturated colors, rich contrast, cinematic atmosphere, dark background"
+    },
+    {
+      "id": "pastel_soft",
+      "label": "Pastel Soft Tones",
+      "description": "ألوان باستيل ناعمة تضيف إحساسًا لطيفًا وهادئًا يناسب صور الـ lifestyle والبراندات الأنيقة.",
+      "promptModule": "soft pastel color palette, low contrast, airy and light atmosphere, gentle highlights, creamy tones, minimal shadows, dreamy aesthetic"
+    }
+  ],
   "imagePurpose": {},
   "style": {
     "cinematic": { "base": "cinematic style, epic composition, dramatic lighting" },

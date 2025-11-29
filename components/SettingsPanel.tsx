@@ -1,7 +1,7 @@
 
-
 import React, { useState, useMemo } from 'react';
-import type { PromptSettings, GenerationMode, ProfessionalTextSettings } from '../types.ts';
+// Import ImagePromptComponents type
+import type { PromptSettings, GenerationMode, ProfessionalTextSettings, ImagePromptComponents } from '../types.ts';
 import { Card } from './Card.tsx';
 import { 
     BASE_IMAGE_STYLES,
@@ -22,6 +22,7 @@ import { Tooltip } from './Tooltip.tsx';
 
 type Translations = typeof translations['en'];
 
+// Update props interface to accept imageComponents
 interface SettingsPanelProps {
   settings: PromptSettings;
   setSettings: React.Dispatch<React.SetStateAction<PromptSettings>>;
@@ -33,6 +34,7 @@ interface SettingsPanelProps {
   setSelectedPlatformName: (name: string) => void;
   t: Translations;
   setPage: (page: string) => void;
+  imageComponents: ImagePromptComponents | null; // Add new prop
 }
 
 const CustomSelect: React.FC<{
@@ -60,7 +62,8 @@ const CustomSelect: React.FC<{
   </div>
 );
 
-const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 'setProTextSettings'>> = ({ settings, setSettings, mode, selectedPlatformName, setSelectedPlatformName, t, setPage }) => {
+// Update ImageVideoSettings to accept and use imageComponents
+const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 'setProTextSettings'>> = ({ settings, setSettings, mode, selectedPlatformName, setSelectedPlatformName, t, setPage, imageComponents }) => {
   
   const dynamicVideoOptions = useMemo(() => getVideoOptionsForPurpose(settings.videoPurpose), [settings.videoPurpose]);
 
@@ -79,7 +82,7 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
             ...preset.settings,
         }));
         setSelectedPlatformName(preset.platformName);
-    } else { // This handles 'default' and any future purposes without a preset
+    } else {
         setSettings(prev => ({
             ...prev,
             videoPurpose: newPurpose,
@@ -118,10 +121,53 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
     return specificTooltips?.[value] || (typeof generalTooltip === 'string' ? generalTooltip : '') || '';
   }
 
+  // Memoize the selected style's description for display
+  const selectedStyleDescription = useMemo(() => {
+    if (mode !== 'image' || !imageComponents?.styles || !settings.selectedStyle || settings.selectedStyle === 'none') {
+      return null;
+    }
+    const style = imageComponents.styles.find(s => s.id === settings.selectedStyle);
+    return style?.description || null;
+  }, [settings.selectedStyle, imageComponents, mode]);
+
+  // Memoize the options for the new style dropdown
+  const styleOptions = useMemo(() => {
+    if (!imageComponents?.styles) {
+        return [{ value: 'none', label: t.styleOptionNone || 'None' }];
+    }
+    const styles = imageComponents.styles.map(style => ({
+        value: style.id,
+        label: style.label,
+    }));
+    return styles;
+}, [imageComponents, t.styleOptionNone]);
+
+
   return (
     <div className="space-y-4">
       {mode === 'image' ? (
           <>
+            {/* New "Style" dropdown */}
+            <div>
+              <CustomSelect
+                label={t.specialStyleLabel || "الاستايل"}
+                tooltip={"Select a special artistic style to apply to your image."}
+                value={settings.selectedStyle || 'none'}
+                onChange={handleSettingChange('selectedStyle')}
+                options={styleOptions}
+                className="mb-2"
+              />
+              {selectedStyleDescription && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-black/20 p-2 rounded-md">
+                  {selectedStyleDescription}
+                </p>
+              )}
+            </div>
+
+            <div className="border-t border-slate-300 dark:border-white/20 my-2"></div>
+            
+            <p className="text-sm text-center text-slate-500 dark:text-slate-400">General Settings</p>
+            
             <div className="flex flex-col sm:flex-row gap-4">
                 <CustomSelect
                     label={t.platformLabel}
@@ -157,6 +203,7 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
           </>
       ) : ( // Video Mode
         <>
+           {/* Video settings UI remains unchanged */}
             <div className="flex flex-col sm:flex-row gap-4">
                 <CustomSelect
                     label={t.videoPurposeLabel}
@@ -262,7 +309,6 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
   );
 };
 
-
 export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
   const { mode, setMode, t, setSettings } = props;
   const [isGearSpinning, setIsGearSpinning] = useState(false);
@@ -272,10 +318,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
     setIsGearSpinning(true);
     setTimeout(() => {
         setIsGearSpinning(false);
-    }, 800); // Animation duration 0.8s
+    }, 800);
   };
 
-  // Wrapped state setters
   const wrappedSetSettings: typeof props.setSettings = (value) => {
     props.setSettings(value);
     triggerSpin();
@@ -287,8 +332,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
   };
 
   const wrappedSetMode: typeof props.setMode = (value) => {
-    if (mode !== value) { // Only reset if the mode actually changes
-        // Reset settings to default when switching between image/video to avoid carrying over incompatible settings
+    if (mode !== value) {
         setSettings(prev => ({
             ...prev,
             style: 'default',
@@ -299,7 +343,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = (props) => {
             fashionEra: 'default',
             videoEffect: 'default',
             videoPurpose: 'default',
-            videoDuration: 'short'
+            videoDuration: 'short',
+            selectedStyle: 'none', // Reset selectedStyle on mode change
         }));
     }
     props.setMode(value);
