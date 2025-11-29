@@ -1,0 +1,23 @@
+--- a/src/locales/ar.ts
++++ b/src/locales/ar.ts
+@@ -36,7 +36,7 @@
+     textToggle: 'نص احترافي',
+     generateButton: 'توليد',
+     generatingButton: 'جارٍ التوليد...',
+-    costGenerate: 'التكلفة: 10',
++    costGenerate: 'التكلفة:',
+     errorEnterIdea: 'يرجى إدخال فكرة أولاً.',
+     errorSelectPlatform: 'يرجى اختيار منصة صالحة.',
+     errorFailedEnhance: 'فشل تحسين الفكرة. استخدام بديل عالي الجودة.',
+--- a/src/locales/en.ts
++++ b/src/locales/en.ts
+@@ -36,7 +36,7 @@
+     textToggle: 'Professional Text',
+     generateButton: 'Generate',
+     generatingButton: 'Generating...',
+-    costGenerate: 'Cost: 10',
++    costGenerate: 'Cost:',
+     errorEnterIdea: 'Please enter an idea first.',
+     errorSelectPlatform: 'Please select a valid platform.',
+     errorFailedEnhance: 'Failed to enhance idea. Using a high-quality fallback.',
+
