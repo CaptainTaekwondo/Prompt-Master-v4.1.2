@@ -1,12 +1,13 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { assembleTextPrompt } from '../../services/textPromptAssembler.ts';
 import { assembleImagePrompt, SelectedItem as ImageSelectedItem } from '../../services/imagePromptAssembler.ts';
 import { assembleVideoPrompt, SelectedItem as VideoSelectedItem } from '../../services/videoPromptAssembler.ts';
 
 import { PLATFORMS_DATA } from '../constants.ts';
 import { translations } from '../../translations.ts';
-// Make sure to import the new types
+// Import the JSON data directly
+import imageData from '../../data/local_image_prompt_components.json';
 import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings, ImagePromptComponents } from '../../types.ts';
 
 type TranslationKeys = keyof typeof translations['en'];
@@ -77,17 +78,8 @@ export function usePromptGeneration({
     const [placeholderText, setPlaceholderText] = useState('');
     const [generationCost, setGenerationCost] = useState(10);
     
-    // State to hold the loaded image prompt components from JSON
-    const [imageComponents, setImageComponents] = useState<ImagePromptComponents | null>(null);
-
-    // Effect to fetch image components data
-    useEffect(() => {
-        // Assuming the JSON file is in the public directory and accessible via this path
-        fetch('/data/local_image_prompt_components.json')
-            .then(res => res.json())
-            .then(data => setImageComponents(data))
-            .catch(err => console.error("Failed to load image prompt components:", err));
-    }, []);
+    // State to hold the loaded image prompt components from the imported JSON
+    const [imageComponents, setImageComponents] = useState<ImagePromptComponents | null>(imageData as ImagePromptComponents);
 
     useEffect(() => {
         let cost = 10;
