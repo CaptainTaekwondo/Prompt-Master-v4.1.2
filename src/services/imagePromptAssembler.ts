@@ -2,12 +2,8 @@
 import { ImagePromptInputs } from '../types';
 
 // --- Platform Strategy Groups ---
-
-// STRATEGY A: "Meta-Prompt" models that benefit from role-playing and detailed instructions.
-const META_PROMPT_PLATFORMS = ['DALL-E 3', 'ChatGPT', 'Gemini', 'Copilot', 'Grok', 'Midjourney'];
-
-// STRATEGY B: "Direct-Prompt" models that prefer concise, keyword-driven descriptions.
-const DIRECT_PLATFORMS: string[] = ['Ideogram', 'Stable Diffusion', 'Leonardo.Ai', 'Playground AI', 'Adobe Firefly', 'Canva'];
+const DIRECT_PLATFORMS = ['Ideogram', 'Stable Diffusion', 'Leonardo.Ai', 'Playground AI', 'Adobe Firefly', 'Canva'];
+const META_PLATFORMS = ['DALL-E 3', 'Gemini', 'ChatGPT', 'Copilot', 'Midjourney', 'Grok'];
 
 
 // --- Helper Functions ---
@@ -27,9 +23,9 @@ const getAspectRatioText = (ratio: string): string => {
 
 // --- Main Prompt Assembly Function ---
 export const assembleImagePrompt = (settings: ImagePromptInputs): string => {
-  const { 
-    idea, platform, style, composition, camera, 
-    lighting, fashionEra, videoEffect, aspectRatio, quality 
+  const {
+    idea, platform, style, composition, camera,
+    lighting, fashionEra, videoEffect, aspectRatio, quality
   } = settings;
 
   // 1. Build the core visual description from all selected options.
@@ -43,33 +39,33 @@ export const assembleImagePrompt = (settings: ImagePromptInputs): string => {
     quality !== 'default' ? quality : ''
   ].filter(Boolean).join(', ');
 
-  let fullDescription = idea;
+  let corePrompt = idea;
   if (styleElements) {
-    fullDescription += `, ${styleElements}`;
+    corePrompt += `, ${styleElements}`;
   }
-  
-  // 2. Apply the correct strategy based on the selected platform.
 
-  // STRATEGY B: For Direct-Prompt platforms, return only the clean description.
+  // --- Final Return (The Split) ---
+
+  // CASE A: Direct Platforms (Ideogram, etc.)
   if (DIRECT_PLATFORMS.includes(platform)) {
-    return fullDescription;
+    return corePrompt;
   }
 
-  // STRATEGY A: For Meta-Prompt platforms, build the detailed wrapper.
-  if (META_PROMPT_PLATFORMS.includes(platform)) {
+  // CASE B & C: Meta Platforms (Midjourney, DALL-E, etc.)
+  if (META_PLATFORMS.includes(platform)) {
     const metaPromptWrapper = `Act as a world-class photographer and I will provide you with a concept and you will create a detailed, realistic, and visually compelling image prompt based on it. Use the following key elements to craft your response:\n\n[INSTRUCTIONS]\n- Start with a clear, concise summary of the main subject and action.\n- Describe the setting and environment with rich, evocative language.\n- Detail the lighting, mood, and atmosphere to set the tone.\n- Specify the artistic style, composition, and camera view for a dynamic shot.\n- Mention any relevant character details, attire, or actions.\n- Use a comma-separated list of keywords at the end for emphasis.\n- Do NOT use any line breaks, only one block of text.\n\n[AVOID]\n- Do not include your own commentary or interpretation outside of the prompt itself.\n- Do not ask me any questions.\n- Do not use any line breaks in your response.`;
 
-    // Handle platform-specific syntax for aspect ratio
+    // B: Midjourney
     if (platform === 'Midjourney') {
-      return `${metaPromptWrapper}\n\n[MY IDEA]: \"${fullDescription}\" --ar ${aspectRatio}`;
-    } else {
-      // For DALL-E 3, Gemini, etc., use a natural language prefix.
-      const prefix = getAspectRatioText(aspectRatio);
-      const prefixedDescription = `${prefix}${fullDescription}`;
-      return `${metaPromptWrapper}\n\n[MY IDEA]: \"${prefixedDescription}\"`;
+      return `${metaPromptWrapper}\n\n[MY IDEA]: \"${corePrompt}\" --ar ${aspectRatio}`;
     }
+    
+    // C: DALL-E / Gemini / ChatGPT
+    const prefix = getAspectRatioText(aspectRatio);
+    const prefixedDescription = `${prefix}${corePrompt}`;
+    return `${metaPromptWrapper}\n\n[MY IDEA]: \"${prefixedDescription}\"`;
   }
 
-  // Fallback for any unhandled platform defaults to the direct approach.
-  return fullDescription;
+  // Fallback for General Mode or any unhandled platform.
+  return corePrompt;
 };
