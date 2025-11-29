@@ -48,9 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (userSubscription) {
       setCurrentPlan(userSubscription.plan);
-      // Any active subscription is considered premium
-      setIsPremium(true);
-      console.log('[AuthContext] Subscription plan:', userSubscription.plan, 'isPremium:', true);
+      const isPaidPlan =
+        userSubscription.plan === 'lite' ||
+        userSubscription.plan === 'plus' ||
+        userSubscription.plan === 'pro';
+      setIsPremium(isPaidPlan);
     } else {
       setCurrentPlan('free');
       setIsPremium(false);

@@ -6,10 +6,10 @@ import type { UserData, InternalPlanId } from '../../types';
 
 // Define daily coin amounts based on the subscription plan.
 const COINS_BY_PLAN: Record<InternalPlanId | 'free', number> = {
-  free: 100,
-  lite: 1000,
-  plus: 5000,
-  pro: 999999, // Effectively unlimited
+  free: 25,
+  lite: 50,
+  plus: 150,
+  pro: 500,
 };
 
 export async function ensureDailyCoinsForUser(userId: string): Promise<number> {
