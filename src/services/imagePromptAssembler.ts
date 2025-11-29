@@ -1,5 +1,5 @@
 
-import { ImagePromptInputs } from '../types';
+import { ImagePromptInputs } from '../../types';
 
 // --- Platform Strategy Groups ---
 const DIRECT_PLATFORMS = ['Ideogram', 'Stable Diffusion', 'Leonardo.Ai', 'Playground AI', 'Adobe Firefly', 'Canva'];
