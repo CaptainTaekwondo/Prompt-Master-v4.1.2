@@ -1,16 +1,12 @@
-
+import { doc, getDoc, updateDoc, setDoc, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { getSubscriptionForUser } from './subscriptionService';
-import type { UserData, InternalPlanId } from '../../types';
+import type { UserData } from '../../types';
 
-// Define daily coin amounts based on the subscription plan.
-const COINS_BY_PLAN: Record<InternalPlanId | 'free', number> = {
-  free: 25,
-  lite: 50,
-  plus: 150,
-  pro: 500,
-};
+const FREE_DAILY_COINS = 100;
+const LITE_DAILY_COINS = 1000;
+const PLUS_DAILY_COINS = 5000;
+const PRO_DAILY_COINS = 999999; // effectively unlimited
 
 export async function ensureDailyCoinsForUser(userId: string): Promise<number> {
   const userRef = doc(db, 'users', userId);
@@ -20,7 +16,22 @@ export async function ensureDailyCoinsForUser(userId: string): Promise<number> {
   // Determine the user's current plan to get the correct coin allowance.
   const subscription = await getSubscriptionForUser(userId);
   const plan = subscription ? subscription.plan : 'free';
-  const dailyAllowance = COINS_BY_PLAN[plan];
+  
+  let dailyAllowance: number;
+  switch (plan) {
+    case 'lite':
+      dailyAllowance = LITE_DAILY_COINS;
+      break;
+    case 'plus':
+      dailyAllowance = PLUS_DAILY_COINS;
+      break;
+    case 'pro':
+      dailyAllowance = PRO_DAILY_COINS;
+      break;
+    default:
+      dailyAllowance = FREE_DAILY_COINS;
+      break;
+  }
 
   if (!snap.exists()) {
     // New user: create their document with the correct coin allowance for their plan.
