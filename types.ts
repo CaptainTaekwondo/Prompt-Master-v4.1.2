@@ -1,3 +1,4 @@
+
 export type GenerationMode = 'image' | 'video' | 'text';
 
 export interface PromptSettings {
@@ -76,6 +77,7 @@ export interface UserData {
   proTier: ProTier | null;
   subscriptionEndDate: number | null; // Timestamp
   lastCoinRewardDate: string | null; // YYYY-MM-DD
+  lastRewardedPlan?: InternalPlanId | 'free';
   adsWatchedToday?: {
     count: number;
     date: string; // YYYY-MM-DD
