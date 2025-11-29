@@ -141,7 +141,7 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
 
     return imageComponents.styles.map(style => ({
         value: style.id,
-        label: specialStyleLabels[style.id]?.label || style.label,
+        label: specialStyleLabels[style.id]?.label || style.id,
     }));
   }, [imageComponents, t]);
 
