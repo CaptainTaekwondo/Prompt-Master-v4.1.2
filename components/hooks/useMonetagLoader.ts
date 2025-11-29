@@ -23,6 +23,8 @@ export function useMonetagLoader() {
         } else {
             if (script) {
                 script.remove();
+                // Reload the page to remove any injected ads
+                window.location.reload();
             }
         }
 
