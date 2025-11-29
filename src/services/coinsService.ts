@@ -10,61 +10,63 @@ const PRO_DAILY_COINS = 999999; // effectively unlimited
 
 export async function ensureDailyCoinsForUser(userId: string): Promise<number> {
   const userRef = doc(db, 'users', userId);
-  const snap = await getDoc(userRef);
-  const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  const userSnap = await getDoc(userRef);
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-  // Determine the user's current plan to get the correct coin allowance.
+  // If no user document yet, create one with free daily coins
+  if (!userSnap.exists()) {
+    const initialCoins = FREE_DAILY_COINS;
+    await setDoc(
+      userRef,
+      {
+        uid: userId,
+        coins: initialCoins,
+        lastCoinRewardDate: today,
+      } as Partial<UserData>,
+      { merge: true }
+    );
+    return initialCoins;
+  }
+
+  const data = userSnap.data() as UserData;
+
+  // Determine daily allowance from subscription
   const subscription = await getSubscriptionForUser(userId);
-  const plan = subscription ? subscription.plan : 'free';
-  
-  let dailyAllowance: number;
-  switch (plan) {
-    case 'lite':
-      dailyAllowance = LITE_DAILY_COINS;
-      break;
-    case 'plus':
-      dailyAllowance = PLUS_DAILY_COINS;
-      break;
-    case 'pro':
-      dailyAllowance = PRO_DAILY_COINS;
-      break;
-    default:
-      dailyAllowance = FREE_DAILY_COINS;
-      break;
+
+  let dailyAllowance = FREE_DAILY_COINS;
+  if (subscription) {
+    switch (subscription.plan) {
+      case 'lite':
+        dailyAllowance = LITE_DAILY_COINS;
+        break;
+      case 'plus':
+        dailyAllowance = PLUS_DAILY_COINS;
+        break;
+      case 'pro':
+        dailyAllowance = PRO_DAILY_COINS;
+        break;
+    }
   }
 
-  if (!snap.exists()) {
-    // New user: create their document with the correct coin allowance for their plan.
-    const initialData = {
-      coins: dailyAllowance,
-      lastCoinRewardDate: today,
-    };
-    await setDoc(userRef, initialData, { merge: true });
-    return initialData.coins;
-  }
+  // If it's a new day, ensure coins are at least the daily allowance
+  if (data.lastCoinRewardDate !== today) {
+    let newCoins = data.coins;
 
-  const data = snap.data() as UserData;
-  const lastReset = data.lastCoinRewardDate;
-
-  // Only perform a reset if it's a new day.
-  if (lastReset !== today) {
-    let currentCoins = data.coins;
-
-    // If the user's current coins are below their daily allowance, top them up.
-    // Otherwise, let them keep their higher balance (e.g., from rewarded ads, if they were free before).
-    if (currentCoins < dailyAllowance) {
-      currentCoins = dailyAllowance;
+    // If coins are below the daily allowance, top them up
+    // If coins are higher (e.g. from ad rewards), keep the higher value
+    if (newCoins < dailyAllowance) {
+      newCoins = dailyAllowance;
     }
 
     await updateDoc(userRef, {
-      coins: currentCoins,
+      coins: newCoins,
       lastCoinRewardDate: today,
     });
-    
-    return currentCoins;
+
+    return newCoins;
   }
 
-  // If it's not a new day, just return the current coin value.
+  // Same day: just return current coins
   return data.coins;
 }
 
