@@ -132,14 +132,15 @@ const ImageVideoSettings: React.FC<Omit<SettingsPanelProps, 'proTextSettings' | 
 
   // Memoize the options for the new style dropdown
   const styleOptions = useMemo(() => {
+    const baseOptions = [{ value: 'none', label: t.styleOptionNone || 'None' }];
     if (!imageComponents?.styles) {
-        return [{ value: 'none', label: t.styleOptionNone || 'None' }];
+        return baseOptions;
     }
-    const styles = imageComponents.styles.map(style => ({
+    const dynamicStyles = imageComponents.styles.map(style => ({
         value: style.id,
         label: style.label,
     }));
-    return styles;
+    return [...baseOptions, ...dynamicStyles];
 }, [imageComponents, t.styleOptionNone]);
 
 
