@@ -66,6 +66,9 @@ export interface GeneratedPrompt {
 
 export type ProTier = 'bronze' | 'silver' | 'gold';
 
+// This is the internal representation of a plan in the database.
+export type InternalPlanId = 'lite' | 'plus' | 'pro';
+
 export interface UserData {
   coins: number;
   favorites: GeneratedPrompt[];

@@ -10,7 +10,8 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { getSubscriptionForUser, UserSubscription, InternalPlanId } from '../services/subscriptionService';
+import { getSubscriptionForUser, UserSubscription } from '../services/subscriptionService';
+import type { InternalPlanId } from '../../types';
 
 interface AuthContextType {
   user: User | null;
@@ -47,8 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (userSubscription) {
       setCurrentPlan(userSubscription.plan);
-      setIsPremium(userSubscription.plan === 'plus' || userSubscription.plan === 'pro');
-      console.log('[AuthContext] Subscription plan:', userSubscription.plan, 'isPremium:', userSubscription.plan === 'plus' || userSubscription.plan === 'pro');
+      // Any active subscription is considered premium
+      setIsPremium(true);
+      console.log('[AuthContext] Subscription plan:', userSubscription.plan, 'isPremium:', true);
     } else {
       setCurrentPlan('free');
       setIsPremium(false);

@@ -1,8 +1,9 @@
 
 import { db } from '../lib/firebase';
 import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import type { InternalPlanId } from '../../types';
 
-export type InternalPlanId = 'lite' | 'plus' | 'pro';
+// PlanId can be a legacy plan or a new internal plan.
 export type PlanId = InternalPlanId | 'bronze' | 'silver' | 'gold';
 
 export interface UserSubscription {
@@ -38,9 +39,7 @@ export async function activateSubscriptionForUser(
     case 'gold':
       normalizedPlan = 'pro';
       break;
-    case 'lite':
-    case 'plus':
-    case 'pro':
+    // Default case handles 'lite', 'plus', 'pro'
     default:
       normalizedPlan = plan as InternalPlanId;
       break;
