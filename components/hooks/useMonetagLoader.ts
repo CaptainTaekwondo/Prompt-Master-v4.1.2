@@ -2,29 +2,40 @@ import { useEffect, useRef } from 'react';
 import { useIsPremiumUser } from './useIsPremiumUser';
 
 const MONETAG_SCRIPT_SRC = 'https://quge5.com/88/tag.min.js';
+const RELOAD_FLAG = 'premium_upgrade_reload';
 
 export function useMonetagLoader() {
     const isPremiumUser = useIsPremiumUser();
     const prevIsPremiumUser = useRef<boolean>();
 
     useEffect(() => {
-        const scriptId = 'monetag-script';
-        const scriptElement = document.getElementById(scriptId) || document.querySelector(`script[src="${MONETAG_SCRIPT_SRC}"]`);
+        // Check if the page was reloaded due to a premium upgrade.
+        const didReload = sessionStorage.getItem(RELOAD_FLAG);
+        if (didReload) {
+            // Clear the flag to prevent logic loops and stop execution for this render.
+            sessionStorage.removeItem(RELOAD_FLAG);
+            // Assume the user is premium now and set the ref to prevent false triggers.
+            prevIsPremiumUser.current = true;
+            return;
+        }
 
-        // Reload ONLY on the transition from non-premium to premium
+        // Reload ONLY on the transition from non-premium to premium.
         if (prevIsPremiumUser.current === false && isPremiumUser === true) {
+            // Set a flag in session storage before reloading.
+            sessionStorage.setItem(RELOAD_FLAG, 'true');
             window.location.reload();
             return; // Stop the hook here to wait for the reload
         }
 
+        const scriptId = 'monetag-script';
+        const scriptElement = document.getElementById(scriptId) || document.querySelector(`script[src="${MONETAG_SCRIPT_SRC}"]`);
+
+        // Standard ad script logic
         if (isPremiumUser) {
-            // For premium users, ensure the ad script is removed.
-            // This will run after the one-time reload.
             if (scriptElement) {
                 scriptElement.remove();
             }
         } else {
-            // For non-premium users, add the script if it's missing.
             if (!scriptElement) {
                 const script = document.createElement('script');
                 script.id = scriptId;
