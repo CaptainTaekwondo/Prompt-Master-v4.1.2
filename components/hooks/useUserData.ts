@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+
+import { useState, useEffect, useCallback } from 'react';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { db } from '../../src/lib/firebase';
 import { ensureDailyCoinsForUser } from '../../src/services/coinsService';
@@ -19,7 +20,7 @@ export function useUserData(user: User | null | undefined) {
                     setUserData(snapshot.data() as UserData);
                 } else {
                     console.log('User document does not exist yet.');
-                    setUserData(null); 
+                    setUserData(null);
                 }
                 setLoading(false);
             });
@@ -31,5 +32,12 @@ export function useUserData(user: User | null | undefined) {
         }
     }, [user]);
 
-    return { userData, loading };
+    const updateUserData = useCallback(async (data: Partial<UserData>) => {
+        if (user) {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, data);
+        }
+    }, [user]);
+
+    return { userData, loading, updateUserData };
 }
