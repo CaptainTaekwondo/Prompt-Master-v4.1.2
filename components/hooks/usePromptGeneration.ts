@@ -204,7 +204,10 @@ export function usePromptGeneration({
         };
 
         if (currentUserData && updateUserData) {
-            const newHistory = [result, ...currentUserData.history.slice(0, 49)];
+            const existingHistory = Array.isArray(currentUserData.history)
+              ? currentUserData.history
+              : [];
+            const newHistory = [result, ...existingHistory.slice(0, 49)];
             updateUserData({ history: newHistory });
         }
 

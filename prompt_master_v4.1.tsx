@@ -251,7 +251,7 @@ export default function PromptV4_1() {
               </div>
             </div>
             <div ref={resultsRef} className="lg:col-span-1 space-y-8">
-              <ResultsDisplay result={generatedResult} t={t} currentUser={currentUser} isFavorite={(id) => currentUserData?.favorites.some(f => f.id === id) || false} onToggleFavorite={handleToggleFavorite} />
+              <ResultsDisplay result={generatedResult} t={t} currentUser={currentUser} isFavorite={(id) => (currentUserData?.favorites || []).some(f => f.id === id)} onToggleFavorite={handleToggleFavorite} />
             </div>
           </div>
         );
