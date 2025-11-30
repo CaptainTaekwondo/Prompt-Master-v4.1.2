@@ -35,6 +35,7 @@ export interface ImagePromptComponents {
 
 
 export interface PromptSettings {
+  platform: string; // Added this field
   imagePurpose: string;
   style: string;
   lighting: string;

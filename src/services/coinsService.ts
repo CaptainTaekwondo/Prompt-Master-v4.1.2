@@ -78,7 +78,7 @@ export async function incrementUserCoins(userId: string, amount: number): Promis
   const updatedSnap = await getDoc(userRef);
   if (updatedSnap.exists()) {
     return (updatedSnap.data() as UserData).coins;
-  } 
+  }
 
   return 0;
 }

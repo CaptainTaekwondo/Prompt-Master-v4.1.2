@@ -1,71 +1,58 @@
 
-import { ImagePromptInputs } from '../../types';
+import type { ImagePromptComponents, Style } from '../../types';
 
-// --- Platform Strategy Groups ---
-const DIRECT_PLATFORMS = ['Ideogram', 'Stable Diffusion', 'Leonardo.Ai', 'Playground AI', 'Adobe Firefly', 'Canva'];
-const META_PLATFORMS = ['DALL-E 3', 'Gemini', 'ChatGPT', 'Copilot', 'Midjourney', 'Grok'];
+// The SelectedItem and ImagePromptInputs interfaces are defined here based on the usage in usePromptGeneration.ts
+// This is necessary because the original types seem to be missing or incorrect.
+export interface SelectedItem {
+    key: string;
+    category: string;
+}
 
+export interface ImagePromptInputs {
+    userDescription: string;
+    selectedItems: SelectedItem[];
+    components: ImagePromptComponents;
+    selectedStyleId: string | 'none';
+    faceSwapEnabled: boolean;
+    faceDescription: string | null;
+    platformName: string;
+}
 
-// --- Helper Functions ---
+/**
+ * Assembles a final image prompt string from various user inputs and settings.
+ * This function is rewritten to match the actual usage within the application.
+ * @param inputs The structured inputs for prompt generation.
+ * @returns A promise that resolves to the final, assembled prompt string.
+ */
+export const assembleImagePrompt = async (inputs: ImagePromptInputs): Promise<string> => {
+    const {
+        userDescription,
+        selectedItems,
+        components,
+        selectedStyleId,
+        platformName // Platform-specific logic can be added here in the future
+    } = inputs;
 
-// Gets a natural language prefix for aspect ratio.
-const getAspectRatioText = (ratio: string): string => {
-  const aspectRatios: { [key: string]: string } = {
-    '16:9': 'A wide cinematic horizontal image of ',
-    '9:16': 'A tall vertical portrait image of ',
-    '1:1': 'A square image of ',
-    '4:3': 'A wide standard image of ',
-    '3:2': 'A landscape photography style image of ',
-  };
-  return aspectRatios[ratio] || '';
-};
+    // Start with the user's base description.
+    let promptParts: string[] = [userDescription];
 
-
-// --- Main Prompt Assembly Function ---
-export const assembleImagePrompt = (settings: ImagePromptInputs): string => {
-  const {
-    idea, platform, style, composition, camera,
-    lighting, fashionEra, videoEffect, aspectRatio, quality
-  } = settings;
-
-  // 1. Build the core visual description from all selected options.
-  const styleElements = [
-    style !== 'default' ? style : '',
-    lighting !== 'default' ? lighting : '',
-    composition !== 'default' ? composition : '',
-    camera !== 'default' ? camera : '',
-    fashionEra !== 'default' ? `${fashionEra} style` : '',
-    videoEffect !== 'default' ? videoEffect : '',
-    quality !== 'default' ? quality : ''
-  ].filter(Boolean).join(', ');
-
-  let corePrompt = idea;
-  if (styleElements) {
-    corePrompt += `, ${styleElements}`;
-  }
-
-  // --- Final Return (The Split) ---
-
-  // CASE A: Direct Platforms (Ideogram, etc.)
-  if (DIRECT_PLATFORMS.includes(platform)) {
-    return corePrompt;
-  }
-
-  // CASE B & C: Meta Platforms (Midjourney, DALL-E, etc.)
-  if (META_PLATFORMS.includes(platform)) {
-    const metaPromptWrapper = `Act as a world-class photographer and I will provide you with a concept and you will create a detailed, realistic, and visually compelling image prompt based on it. Use the following key elements to craft your response:\n\n[INSTRUCTIONS]\n- Start with a clear, concise summary of the main subject and action.\n- Describe the setting and environment with rich, evocative language.\n- Detail the lighting, mood, and atmosphere to set the tone.\n- Specify the artistic style, composition, and camera view for a dynamic shot.\n- Mention any relevant character details, attire, or actions.\n- Use a comma-separated list of keywords at the end for emphasis.\n- Do NOT use any line breaks, only one block of text.\n\n[AVOID]\n- Do not include your own commentary or interpretation outside of the prompt itself.\n- Do not ask me any questions.\n- Do not use any line breaks in your response.`;
-
-    // B: Midjourney
-    if (platform === 'Midjourney') {
-      return `${metaPromptWrapper}\n\n[MY IDEA]: \"${corePrompt}\" --ar ${aspectRatio}`;
+    // Add details from the general settings dropdowns (lighting, composition, etc.).
+    const itemDetails = selectedItems.map(item => item.key);
+    if (itemDetails.length > 0) {
+        promptParts.push(...itemDetails);
     }
-    
-    // C: DALL-E / Gemini / ChatGPT
-    const prefix = getAspectRatioText(aspectRatio);
-    const prefixedDescription = `${prefix}${corePrompt}`;
-    return `${metaPromptWrapper}\n\n[MY IDEA]: \"${prefixedDescription}\"`;
-  }
 
-  // Fallback for General Mode or any unhandled platform.
-  return corePrompt;
+    // Add the detailed prompt module from the selected 'Style'.
+    if (selectedStyleId && selectedStyleId !== 'none') {
+        const selectedStyle = components.styles.find((s: Style) => s.id === selectedStyleId);
+        if (selectedStyle && selectedStyle.promptModule) {
+            promptParts.push(selectedStyle.promptModule);
+        }
+    }
+
+    // Join all parts with commas for a clean, structured prompt.
+    // Filters out any empty or null parts.
+    const finalPrompt = promptParts.filter(Boolean).join(', ');
+
+    return finalPrompt;
 };

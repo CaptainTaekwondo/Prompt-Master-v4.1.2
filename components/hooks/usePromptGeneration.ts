@@ -1,14 +1,14 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { assembleTextPrompt } from '../../services/textPromptAssembler.ts';
+import { assembleTextPrompt } from '../../services/textPromptAssembler';
 import { assembleImagePrompt, SelectedItem as ImageSelectedItem } from '../../services/imagePromptAssembler.ts';
-import { assembleVideoPrompt, SelectedItem as VideoSelectedItem } from '../../services/videoPromptAssembler.ts';
+import { assembleVideoPrompt, SelectedItem as VideoSelectedItem } from '../../services/videoPromptAssembler';
 
-import { PLATFORMS_DATA } from '../constants.ts';
-import { translations } from '../../translations.ts';
+import { PLATFORMS_DATA } from '../constants';
+import { translations } from '../../translations';
 // Import the JSON data directly
 import imageData from '../../data/local_image_prompt_components.json';
-import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings, ImagePromptComponents } from '../../types.ts';
+import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings, ImagePromptComponents } from '../../types';
 
 type TranslationKeys = keyof typeof translations['en'];
 
@@ -46,7 +46,7 @@ const initialProTextSettings: ProfessionalTextSettings = {
     paperSize: 'A4',
     fontSize: 12,
     pageSettings: { count: 500, type: 'words' },
-    authorInfo: { name: '', title: 'none', language: 'en', repeatOnEveryPage: false, placement: { macro: 'footer', micro: 'right' } },
+    authorInfo: { name: '', title: 'none', language: 'en', repeatOnEveryPage: false, placement: { macro: 'footer', horizontal: 'right' }, placementSetByUser: false },
 };
 
 export function usePromptGeneration({
@@ -78,18 +78,13 @@ export function usePromptGeneration({
     const [placeholderText, setPlaceholderText] = useState('');
     const [generationCost, setGenerationCost] = useState(10);
     
-    // State to hold the loaded image prompt components from the imported JSON
     const [imageComponents, setImageComponents] = useState<ImagePromptComponents | null>(imageData as ImagePromptComponents);
 
     useEffect(() => {
         let cost = 10;
-        if (mode === 'image') {
-            cost = 10;
-        } else if (mode === 'video') {
-            cost = 20;
-        } else if (mode === 'text') {
-            cost = 30;
-        }
+        if (mode === 'image') cost = 10;
+        else if (mode === 'video') cost = 20;
+        else if (mode === 'text') cost = 30;
         setGenerationCost(cost);
     }, [mode]);
     
@@ -111,7 +106,7 @@ export function usePromptGeneration({
     useEffect(() => {
         setSelectedPlatformName(PLATFORMS_DATA[mode]?.[0]?.name || 'General Mode');
         setGeneratedResult(null);
-        setSettings(initialSettings); // RESET state to prevent setting conflicts
+        setSettings(initialSettings);
     }, [mode]);
 
     const handleGetNewIdea = useCallback(() => {
@@ -144,20 +139,25 @@ export function usePromptGeneration({
         if (mode === 'image') {
             if (!imageComponents) {
                 console.error("Image components not loaded yet.");
-                setErrorKey('errorSomethingWentWrong'); // Or a more specific error key
+                setErrorKey('errorFailedEnhance');
                 setIsProcessing(false);
                 return;
             }
+
+            const imageSettingKeys: (keyof ImagePromptSettings)[] = ['imagePurpose', 'style', 'lighting', 'composition', 'cameraAngle', 'mood', 'colorPalette', 'aspectRatio', 'quality', 'selectedStyle'];
             const imageSettings = settings as ImagePromptSettings;
             const selectedItems: ImageSelectedItem[] = Object.entries(imageSettings)
-                .filter(([key, value]) => value !== 'default' && value && key !== 'selectedStyle') // Exclude selectedStyle from this list
+                .filter(([key, value]) => 
+                    imageSettingKeys.includes(key as keyof ImagePromptSettings) &&
+                    value !== 'default' && value && key !== 'selectedStyle'
+                )
                 .map(([key, value]) => ({ key: value as string, category: key }));
             
             finalPrompt = await assembleImagePrompt({
                 userDescription: userInput,
                 selectedItems,
-                components: imageComponents, // Pass all loaded components
-                selectedStyleId: imageSettings.selectedStyle, // Pass the ID of the selected style
+                components: imageComponents,
+                selectedStyleId: imageSettings.selectedStyle,
                 faceSwapEnabled: false, 
                 faceDescription: null,
                 platformName: selectedPlatformName,
@@ -165,9 +165,13 @@ export function usePromptGeneration({
             platform = PLATFORMS_DATA.image.find(p => p.name === selectedPlatformName);
 
         } else if (mode === 'video') {
+             const videoSettingKeys: (keyof VideoPromptSettings)[] = ['cameraShot', 'cameraMovement', 'fashionEra', 'videoEffect', 'videoPurpose', 'videoDuration'];
              const videoSettings = settings as VideoPromptSettings;
              const selectedItems: VideoSelectedItem[] = Object.entries(videoSettings)
-                .filter(([_, value]) => value !== 'default' && value)
+                .filter(([key, value]) => 
+                    videoSettingKeys.includes(key as keyof VideoPromptSettings) &&
+                    value !== 'default' && value
+                )
                 .map(([key, value]) => ({ key: value as string, category: key }));
             
             finalPrompt = await assembleVideoPrompt({
@@ -224,6 +228,6 @@ export function usePromptGeneration({
         generationCost,
         handleGenerate,
         handleGetNewIdea,
-        imageComponents, // Return the loaded components
+        imageComponents,
     };
 }
