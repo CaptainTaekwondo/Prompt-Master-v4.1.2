@@ -1,31 +1,31 @@
 import { useEffect } from 'react';
-import { useIsPremiumUser } from './useIsPremiumUser';
+import { useAuth } from '../../src/context/AuthContext';
 
-const MONETAG_SCRIPT_SRC = 'https://quge5.com/88/tag.min.js';
+const MONETAG_SCRIPT_ID = 'monetag-sdk';
+const MONETAG_SCRIPT_SRC = '//monetag.com/d/p/243/2764197.js';
 
 export function useMonetagLoader() {
-    const isPremiumUser = useIsPremiumUser();
+  const { isPremium } = useAuth();
 
-    useEffect(() => {
-        const scriptId = 'monetag-script';
-        const scriptElement = document.getElementById(scriptId);
+  useEffect(() => {
+    console.log('[MonetagLoader] isPremium =', isPremium);
+    const existingScript = document.getElementById(MONETAG_SCRIPT_ID);
 
-        if (isPremiumUser) {
-            // If the user is premium, remove the script if it exists.
-            if (scriptElement) {
-                scriptElement.remove();
-            }
-        } else {
-            // If the user is not premium, add the script if it doesn't exist.
-            if (!scriptElement) {
-                const script = document.createElement('script');
-                script.id = scriptId;
-                script.src = MONETAG_SCRIPT_SRC;
-                script.dataset.zone = '188606';
-                script.async = true;
-                script.dataset.cfasync = 'false';
-                document.body.appendChild(script);
-            }
-        }
-    }, [isPremiumUser]);
+    if (isPremium) {
+      // لو المستخدم مشترك في أي باقة، احذف سكربت Monetag إن وُجد ولا تحمّله مرة أخرى
+      if (existingScript) {
+        existingScript.remove();
+      }
+      return;
+    }
+
+    // لو المستخدم غير مشترك، حمّل سكربت Monetag لو مش موجود
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.id = MONETAG_SCRIPT_ID;
+      script.src = MONETAG_SCRIPT_SRC;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, [isPremium]);
 }

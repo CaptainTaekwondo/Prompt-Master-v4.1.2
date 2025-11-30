@@ -104,7 +104,7 @@ export interface GeneratedPrompt {
 export type ProTier = 'bronze' | 'silver' | 'gold';
 
 // This is the internal representation of a plan in the database.
-export type InternalPlanId = 'lite' | 'plus' | 'pro';
+export type InternalPlanId = 'lite' | 'plus' | 'pro' | 'bronze' | 'silver' | 'gold' | 'free';
 
 export interface UserData {
   coins: number;
@@ -113,7 +113,7 @@ export interface UserData {
   proTier: ProTier | null;
   subscriptionEndDate: number | null; // Timestamp
   lastCoinRewardDate: string | null; // YYYY-MM-DD
-  lastRewardedPlan?: InternalPlanId | 'free';
+  lastRewardedPlan?: InternalPlanId;
   adsWatchedToday?: {
     count: number;
     date: string; // YYYY-MM-DD

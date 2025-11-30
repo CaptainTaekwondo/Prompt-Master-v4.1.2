@@ -21,9 +21,55 @@ export const EarnCoinsModal: React.FC<EarnCoinsModalProps> = ({ onClose, onAdCom
     const [countdown, setCountdown] = useState(15);
 
     const today = new Date().toISOString().split('T')[0];
-    const adsWatched = (userData?.adsWatchedToday?.date === today) ? userData.adsWatchedToday.count : 0;
-    const sharesDone = (userData?.sharesToday?.date === today) ? userData.sharesToday.count : 0;
-    
+
+    // دعم الشكلين للـ adsWatchedToday:
+    // 1) الشكل الجديد: { date: string; count: number }
+    // 2) الشكل القديم: number + lastAdWatched timestamp
+    let adsWatched = 0;
+    const rawAds: any = userData ? (userData as any).adsWatchedToday : undefined;
+
+    if (rawAds) {
+      if (typeof rawAds === 'object' && rawAds.date === today) {
+        adsWatched = rawAds.count ?? 0;
+      } else if (typeof rawAds === 'number') {
+        const lastAdTs: any = (userData as any).lastAdWatched;
+        if (lastAdTs) {
+          const lastAdDate = new Date(lastAdTs).toISOString().split('T')[0];
+          if (lastAdDate === today) {
+            adsWatched = rawAds;
+          }
+        }
+      }
+    }
+
+    // بالنسبة للمشاركات، ندعم الشكلين:
+    // 1) الشكل الجديد: { date: string; count: number }
+    // 2) الشكل القديم: number + lastCoinRewardDate (string أو timestamp)
+    let sharesDone = 0;
+    const rawShares: any = userData ? (userData as any).sharesToday : undefined;
+
+    if (rawShares) {
+      if (typeof rawShares === 'object' && rawShares.date === today) {
+        sharesDone = rawShares.count ?? 0;
+      } else if (typeof rawShares === 'number') {
+        const lastShareRaw: any =
+          userData && (userData as any).lastShareRewardDate
+            ? (userData as any).lastShareRewardDate
+            : (userData as any).lastCoinRewardDate;
+
+        if (lastShareRaw) {
+          const lastShareStr =
+            typeof lastShareRaw === 'string'
+              ? lastShareRaw
+              : new Date(lastShareRaw).toISOString().split('T')[0];
+
+          if (lastShareStr === today) {
+            sharesDone = rawShares;
+          }
+        }
+      }
+    }
+
     const adLimitReached = adsWatched >= DAILY_AD_LIMIT;
     const shareLimitReached = sharesDone >= DAILY_SHARE_LIMIT;
     const allLimitsReached = adLimitReached && shareLimitReached;
