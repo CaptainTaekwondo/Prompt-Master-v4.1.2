@@ -6,8 +6,6 @@ import { assembleVideoPrompt, SelectedItem as VideoSelectedItem } from '../../se
 
 import { PLATFORMS_DATA } from '../constants';
 import { translations } from '../../translations';
-// Import the JSON data directly
-import imageData from '../../data/local_image_prompt_components.json';
 import type { PromptSettings, GenerationMode, GeneratedPrompt, ProfessionalTextSettings, UserData, Platform, ImagePromptSettings, VideoPromptSettings, ImagePromptComponents } from '../../types';
 
 type TranslationKeys = keyof typeof translations['en'];
@@ -78,7 +76,25 @@ export function usePromptGeneration({
     const [placeholderText, setPlaceholderText] = useState('');
     const [generationCost, setGenerationCost] = useState(10);
     
-    const [imageComponents, setImageComponents] = useState<ImagePromptComponents | null>(imageData as ImagePromptComponents);
+    const [imageComponents, setImageComponents] = useState<ImagePromptComponents | null>(null);
+
+    useEffect(() => {
+        const fetchImageComponents = async () => {
+            try {
+                const response = await fetch('/data/local_image_prompt_components.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                setImageComponents(data);
+            } catch (error) {
+                console.error("Failed to fetch image components:", error);
+                setErrorKey('errorFailedEnhance'); // Fallback error
+            }
+        };
+
+        fetchImageComponents();
+    }, [setErrorKey]);
 
     useEffect(() => {
         let cost = 10;
