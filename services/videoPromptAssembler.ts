@@ -60,18 +60,7 @@ export const assembleVideoPrompt = async ({
     try {
         const components = await getComponents(platformName);
 
-        // Simplified Workflow for certain platforms
-        if (components.workflow?.type === 'simple') {
-            const specParts = selectedItems
-                .map(item => (components[item.category] as Record<string, string>)?.[item.key])
-                .filter(Boolean);
-            
-            let simplePrompt = `${userDescription}, ${specParts.join(', ')}`;
-            console.log(`[VideoPromptAssembler] Using SIMPLIFIED workflow for ${platformName}.`);
-            return simplePrompt;
-        }
-
-        // Advanced "Simulated Professional Workflow"
+        // ALWAYS Use Advanced "Simulated Professional Workflow"
         console.log(`[VideoPromptAssembler] Using ADVANCED workflow for ${platformName}.`);
         const rolePlay = (components.identity?.default || '').replace('{platform}', platformName);
         const qaHeader = components.qualityAssuranceChecklist?.header || '';
@@ -92,13 +81,13 @@ export const assembleVideoPrompt = async ({
             });
         }
         if(checklistItems.length > 0) {
-            promptParts.push(checklistItems.join('\\n'));
+            promptParts.push(checklistItems.join('\n'));
         }
 
         promptParts.push(
-            '\\n' + planning,
+            '\n' + planning,
             review,
-            '\\n### [PROMPT SPECIFICATIONS]',
+            '\n### [PROMPT SPECIFICATIONS]',
         );
 
         const specParts = selectedItems
@@ -107,7 +96,6 @@ export const assembleVideoPrompt = async ({
 
         let mainPrompt = `${userDescription}, ${specParts.join(', ')}`;
         
-        // **FIXED**: Safely access platformSyntax
         if (components.platformSyntax && typeof components.platformSyntax === 'object' && platformName in components.platformSyntax) {
             const platformSyntaxString = (components.platformSyntax as Record<string, string>)[platformName];
             const aspectRatio = selectedItems.find(i => i.category === 'aspectRatio')?.key || '16:9';
@@ -115,10 +103,10 @@ export const assembleVideoPrompt = async ({
         }
 
         promptParts.push(mainPrompt);
-        promptParts.push('\\n' + negativePrompts);
-        promptParts.push('\\n' + finalRender);
+        promptParts.push('\n' + negativePrompts);
+        promptParts.push('\n' + finalRender);
         
-        const finalPrompt = promptParts.join('\\n\\n').trim();
+        const finalPrompt = promptParts.join('\n\n').trim();
         console.log(`[VideoPromptAssembler] Final Assembled Prompt for ${platformName}: \"${finalPrompt}\"`);
         console.log('--- [VideoPromptAssembler v2.1] Execution End ---');
         
