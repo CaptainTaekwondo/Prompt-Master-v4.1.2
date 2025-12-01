@@ -33,7 +33,7 @@ type Page = 'main' | 'favorites' | 'history' | 'subscription' | 'report' | 'imag
 export default function PromptV4_1() {
   const { language, theme, setTheme, toggleLanguage } = useUserSettings();
   const t = translations[language as keyof typeof translations] || translations.en;
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser, logout, isPremium, currentPlan } = useAuth();
 
   const { userData: currentUserData, updateUserData, deletePrompt, handleWatchAd, handleShareReward, handlePurchase } = useUserData(currentUser);
   
@@ -101,12 +101,20 @@ export default function PromptV4_1() {
       closePaymentOptionsModal();
   };
 
-  const handleConfirmPayment = () => {
-    if (paymentContext) {
-        handlePurchase(paymentContext.tier, paymentContext.durationDays);
-        closePaymentModal();
-        setPage('main');
-    }
+  const handleConfirmPayment = async () => {
+    if (!paymentContext) return;
+
+    // تنفيذ عملية الشراء (اشتراك المستخدم)
+    await handlePurchase(paymentContext.tier, paymentContext.durationDays);
+
+    // إغلاق نافذة الدفع والعودة للصفحة الرئيسية
+    closePaymentModal();
+    setPage('main');
+
+    // Reload واحد بعد الاشتراك لضمان تحميل الموقع في وضع Premium بدون Monetag
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
 
@@ -262,6 +270,10 @@ export default function PromptV4_1() {
     <div className="min-h-screen text-slate-800 dark:text-white selection:bg-purple-500 selection:text-white transition-colors duration-300">
       <div className="container mx-auto p-4 md:p-8 max-w-7xl">
         <Header language={language} toggleLanguage={toggleLanguage} slogan={t.headerSlogan} slogan2={t.headerSlogan2} t={t} theme={theme} setTheme={setTheme} currentUser={currentUser} currentUserData={currentUserData} handleLogout={logout} openLoginModal={openLoginModal} openEarnCoinsModal={openEarnCoinsModal} setPage={setPage} />
+        {/* DEBUG: يمكن حذف هذا لاحقًا */}
+        <p style={{ fontSize: 10, color: '#fff', opacity: 0.7, marginBottom: '4px' }}>
+          DEBUG: plan={currentPlan} | isPremium={String(isPremium)}
+        </p>
         <main>{renderPage()}</main>
         <footer className="text-center text-sm text-white/60 dark:text-white/40 mt-12 pb-4">
           <div className="flex justify-center gap-4 mb-2">

@@ -1,31 +1,40 @@
 import { useEffect } from 'react';
 import { useAuth } from '../../src/context/AuthContext';
 
-const MONETAG_SCRIPT_ID = 'monetag-sdk';
-const MONETAG_SCRIPT_SRC = '//monetag.com/d/p/243/2764197.js';
+const MONETAG_SCRIPT_ID = 'monetag-script';
+const MONETAG_SCRIPT_SRC = 'https://quge5.com/88/tag.min.js';
+const MONETAG_ZONE_ID = '188606';
 
 export function useMonetagLoader() {
-  const { isPremium } = useAuth();
+  const { isPremium, loading } = useAuth();
 
   useEffect(() => {
-    console.log('[MonetagLoader] isPremium =', isPremium);
-    const existingScript = document.getElementById(MONETAG_SCRIPT_ID);
+    console.log('[MonetagLoader] loading =', loading, 'isPremium =', isPremium);
+
+    // لو ما زال الـ Auth في حالة تحميل، لا تقرر أي شيء ولا تحمّل السكربت
+    if (loading) return;
+
+    let script =
+      (document.getElementById(MONETAG_SCRIPT_ID) as HTMLScriptElement | null) ||
+      (document.querySelector(`script[src="${MONETAG_SCRIPT_SRC}"]`) as HTMLScriptElement | null);
 
     if (isPremium) {
-      // لو المستخدم مشترك في أي باقة، احذف سكربت Monetag إن وُجد ولا تحمّله مرة أخرى
-      if (existingScript) {
-        existingScript.remove();
+      // لو المستخدم مشترك في أي باقة → احذف سكربت Monetag إن وُجد
+      if (script) {
+        script.remove();
       }
       return;
     }
 
-    // لو المستخدم غير مشترك، حمّل سكربت Monetag لو مش موجود
-    if (!existingScript) {
-      const script = document.createElement('script');
+    // لو المستخدم Free (isPremium = false) → حمّل سكربت Monetag MultiTag لو مش موجود
+    if (!script) {
+      script = document.createElement('script');
       script.id = MONETAG_SCRIPT_ID;
       script.src = MONETAG_SCRIPT_SRC;
       script.async = true;
-      document.head.appendChild(script);
+      script.dataset.zone = MONETAG_ZONE_ID;
+      script.dataset.cfasync = 'false';
+      document.body.appendChild(script);
     }
-  }, [isPremium]);
+  }, [isPremium, loading]);
 }

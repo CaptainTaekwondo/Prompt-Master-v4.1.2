@@ -28,6 +28,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const FIRST_AUTH_RELOAD_KEY = 'authReloadDone';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -60,18 +61,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+
+      if (user) {
+        // جلب الاشتراك وتحديث isPremium/currentPlan
+        await refreshSubscription();
+
+        // Reload واحد فقط بعد أول تسجيل/تسجيل دخول في الجلسة
+        const reloadDone = sessionStorage.getItem(FIRST_AUTH_RELOAD_KEY);
+        if (!reloadDone) {
+          sessionStorage.setItem(FIRST_AUTH_RELOAD_KEY, 'true');
+          window.location.reload();
+          return; // لا حاجة لإكمال الكود بعد طلب الـ reload
+        }
+      } else {
+        // لا يوجد مستخدم → إعادة التهيئة وإزالة علامة الـ reload من الجلسة
+        setSubscription(null);
+        setCurrentPlan('free');
+        setIsPremium(false);
+        sessionStorage.removeItem(FIRST_AUTH_RELOAD_KEY);
+      }
+
+      // بعد انتهاء auth + الاشتراك (وفي حال عدم عمل reload)، اعتبر أن التحميل انتهى
       setLoading(false);
     });
-    return () => unsubscribe();
-  }, []);
 
-  useEffect(() => {
-    if (user) {
-      refreshSubscription();
-    }
-  }, [user, refreshSubscription]);
+    return () => unsubscribe();
+  }, [refreshSubscription]);
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
