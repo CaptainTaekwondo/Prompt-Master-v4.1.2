@@ -331,13 +331,9 @@ export default function PromptV4_1() {
   }
 
   return (
-    <div className="min-h-screen text-slate-800 dark:text-white selection:bg-purple-500 selection:text-white transition-colors duration-300">
+    <div className="min-h-screen text-slate-800 dark:text-white selection:bg-purple-500 selection:text-white transition-colors duration-300 overflow-x-hidden">
       <div className="container mx-auto p-4 md:p-8 max-w-7xl">
         <Header language={language} toggleLanguage={toggleLanguage} slogan={t.headerSlogan} slogan2={t.headerSlogan2} t={t} theme={theme} setTheme={setTheme} currentUser={currentUser} currentUserData={currentUserData} handleLogout={logout} openLoginModal={openLoginModal} openEarnCoinsModal={openEarnCoinsModal} setPage={setPage} />
-        {/* DEBUG: يمكن حذف هذا لاحقًا */}
-        <p style={{ fontSize: 10, color: '#fff', opacity: 0.7, marginBottom: '4px' }}>
-          DEBUG: plan={currentPlan} | isPremium={String(isPremium)}
-        </p>
         <main>{renderPage()}</main>
 
         <footer className="text-center text-sm text-white mt-12 pb-6">
