@@ -43,6 +43,20 @@ type Page =
 
 export default function PromptV4_1() {
   const { language, theme, setTheme, toggleLanguage } = useUserSettings();
+  const footerLabels =
+    language === 'ar'
+      ? {
+          about: 'من نحن',
+          terms: 'شروط الاستخدام',
+          privacy: 'سياسة الخصوصية',
+          contact: 'اتصل بنا',
+        }
+      : {
+          about: 'About Us',
+          terms: 'Terms of Use',
+          privacy: 'Privacy Policy',
+          contact: 'Contact Us',
+        };
   const t = translations[language as keyof typeof translations] || translations.en;
   const { user: currentUser, logout, isPremium, currentPlan } = useAuth();
 
@@ -248,38 +262,213 @@ export default function PromptV4_1() {
         return <PerformanceReport onBack={() => setPage('main')} t={t} mode="video" />;
         case 'about':
             return (
-              <InfoPage title="😎 من نحن" gradient="bg-gradient-to-br from-white/20 via-transparent to-purple-500/10 dark:from-white/5 dark:to-purple-500/20">
-                <p>
-                  Prompt Master v4.1 منصة عربية تساعد المبدعين وصنّاع المحتوى على كتابة برومبتات احترافية للذكاء الاصطناعي للنصوص والصور والفيديو، مع واجهة بسيطة وخيارات متقدّمة تناسب الجميع.
-                </p>
+              <InfoPage title={language === 'ar' ? '😎 من نحن' : '😎 About Us'} gradient="bg-gradient-to-br from-white/20 via-transparent to-purple-500/10 dark:from-white/5 dark:to-purple-500/20">
+              {
+                language === 'ar' ? (
+                  <p className="text-sm md:text-base leading-relaxed">
+                    انا اللي ضاع من عمري سنين 😮‍💨 وانا بعملك موقع لعمل أفضل برومبت احترافي في العالم 🌍
+                    <br />
+                    مش لازم تشكرني 🙏… بس على الأقل شارك الموقع مع أصحابك 🫶، يمكن ربنا يهديهم ويبطلوا برومبتات مكسّرة 😄
+                    <br /><br />
+                    بص يا بطل… أنا عارف إنك كنت بتضيّع وقت كتير 😩
+                    <br />
+                    تلف بين جروبات وتليجرام ويوتيوب وجوجل…
+                    <br />
+                    وفي الآخر الذكاء الاصطناعي 🤖 يبصلك كده ويقولك:
+                    <br />
+                    <span className="inline-block ms-2">«مش فاهم انت عايز إيه بالظبط!» 🤦</span>
+                    <br /><br />
+                    بهزر معاك طبعًا 😄 بس متقلّقش 🫡
+                    <br />
+                    تعبك انتهى… انت وصلت للمكان الصح 🥳
+                    <br /><br />
+                    بدل ما تقعد تكتب برومبت ٣٠ سطر، وتعدّل عليهم ٦٠ مرة 🙄
+                    <br />
+                    <strong>Prompt Master</strong> بيشيل عنك وجع الدماغ.
+                    <br /><br />
+                    - عايز نص يطلع فخامة؟ نخلي كلامك يلبس بدلة رسمية 😏
+                    <br />
+                    - عايز صورة أسطورية؟ ندي الـ AI 🤖 برومبت يخليه يرسم لك خيال اتحقق 🔥
+                    <br />
+                    - عايز فيديو يبهر الدنيا؟ نزبطله سيناريو يخلي المحتوى بتاعك عامل زي إعلان عالمي 😎
+                    <br /><br />
+                    كل ده من خلال واجهة عربية بسيطة،
+                    <br />
+                    تختار فكرتك 💡، والمنصّة اللي هتشتغل عليها، وشوية إعدادات كده من بتوع المحترفين،
+                    <br />
+                    وإحنا نرجعلك برومبت مظبوط جاهز تنسخه وتلزّقه، والذكاء الاصطناعي 🤖 يسمع الكلام من غير فصال 😁
+                    <br /><br />
+                    هدفنا إننا نوفرلك وقتك ⏱️ وأعصابك 🤯
+                    <br />
+                    بدل ما كل شوية تقول: <em>«أكتب إيه للـ AI؟»</em> وتتمرمط بين المقالات والتجارب الفاشلة 😪
+                    <br /><br />
+                    ركّز أنت على فكرتك وإبداعك 💡
+                    <br />
+                    وسيب علينا حوارات الصياغة والتركيب والتفاصيل التقنية 💪
+                    <br /><br />
+                    أهو عملتلك موقع يخليك تطلع شغل نااار 🔥
+                    <br />
+                    بس ما تولّعش في الدنيا بجد، إحنا مش ناقصين حرايق 😅
+                    <br />
+                    بهزر برضه… مالك واخد الكلام جد كده ليه؟ 🙄
+                    <br />
+                    يلا يا بطل، ورينا إبداعاتك الجاية 😉
+                  </p>
+                ) : (
+                  <p className="text-sm md:text-base leading-relaxed">
+                    I’m the guy who spent years of his life 😮‍💨 building you a website
+                    just to give you the best prompt generator in the world 🌍
+                    <br />
+                    You don’t have to thank me 🙏… but at least share the site with your friends 🫶
+                    so they stop bullying the poor AI 🤖 with broken prompts 😄
+                    <br /><br />
+                    Look, hero… I know you’ve wasted a lot of time 😩
+                    jumping between YouTube, Telegram groups, and random blogs…
+                    <br />
+                    and in the end the AI 🤖 just stares at you like:
+                    <br />
+                    <span className="inline-block ms-2">“I have no idea what you want.” 🤦</span>
+                    <br /><br />
+                    I’m only teasing you 😄 but seriously, don’t worry 🫡
+                    your suffering is over… you’ve reached the right place 🥳
+                    <br /><br />
+                    Instead of writing 30 lines of prompt and editing them 60 times 🙄,
+                    <br />
+                    <strong>Prompt Master</strong> takes the headache away.
+                    <br /><br />
+                    - Need a powerful text prompt? We make you sound like a pro 😏
+                    <br />
+                    - Want an epic image? We feed the AI 🤖 a prompt that turns imagination into pixels 🔥
+                    <br />
+                    - Planning a jaw-dropping video? We help you set the scene like a world-class director 😎
+                    <br /><br />
+                    All through a simple, Arabic-friendly interface:
+                    <br />
+                    you bring your idea 💡, choose the platform, tweak a few options,
+                    <br />
+                    and we dress it in a clean, professional prompt any AI 🤖 will respect 😁
+                    <br /><br />
+                    Our goal is simple:
+                    save your time ⏱️, save your nerves 🤯,
+                    and let you focus on creativity instead of asking
+                    <em>“What should I write for the AI?”</em> 🤔
+                    <br /><br />
+                    You bring the ideas 💡,
+                    Prompt Master handles the wording, structure, and all the nerdy stuff 💪
+                    <br /><br />
+                    I built you a tool that lets you create 🔥 hot work…
+                    <br />
+                    just don’t burn down the whole internet with it, okay? 😅
+                    <br />
+                    Kidding… why so serious? 🙄
+                    <br />
+                    Come on, hero — let’s see what you create next 😉
+                  </p>
+                )
+              }
               </InfoPage>
             );
           case 'terms':
             return (
-              <InfoPage title="🥱 شروط الاستخدام" gradient="bg-gradient-to-br from-amber-300/20 via-transparent to-orange-500/10 dark:from-amber-200/10 dark:to-orange-500/25">
-                 <p>
-                    باستخدامك للمنصة فأنت توافق على عدم إساءة استخدام المحتوى الناتج، أو مخالفته للقوانين المحلية أو حقوق الملكية الفكرية. أنت مسؤول عن أي محتوى تقوم بإنشائه أو مشاركته من خلال الخدمة.
-                </p>
-             </InfoPage>
+              <InfoPage title={language === 'ar' ? '🥱 شروط الاستخدام' : '🥱 Terms of Use'} gradient="bg-gradient-to-br from-amber-300/20 via-transparent to-orange-500/10 dark:from-amber-200/10 dark:to-orange-500/25">
+                {language === 'ar' ? (
+                  <>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      باستخدامك لـ Prompt Master فأنت توافق على عدم إساءة استخدام المحتوى الناتج
+                      أو مخالفته للقوانين المحلية أو حقوق الملكية الفكرية. أنت وحدك المسؤول
+                      عن أي محتوى تقوم بإنشائه أو مشاركته من خلال المنصة.
+                    </p>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      لا نتحمل أي مسؤولية قانونية عن سوء استخدام البرومبتات أو المحتوى الناتج.
+                      يُسمح بالاستخدام الشخصي والتجاري في حدود القوانين والأنظمة المعمول بها في بلدك.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      By using Prompt Master, you agree not to misuse the generated content
+                      or violate any local laws, community standards, or intellectual property rights.
+                      You are fully responsible for any content you create or share through this platform.
+                    </p>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      We do not accept legal liability for any misuse of prompts or generated output.
+                      Personal and commercial use is allowed as long as it complies with the laws
+                      and regulations in your country.
+                    </p>
+                  </>
+                )}
+              </InfoPage>
             );
           case 'privacy':
             return (
-              <InfoPage title="🤫 سياسة الخصوصية" gradient="bg-gradient-to-br from-cyan-300/20 via-transparent to-emerald-500/10 dark:from-cyan-200/10 dark:to-emerald-500/25">
-                <p>
-                    نقوم بتخزين بعض البيانات الأساسية مثل البريد الإلكتروني، رصيد العملات وسجل البرومبتات داخل قاعدة البيانات لتحسين التجربة وحماية حسابك. لا نقوم ببيع بياناتك لأي طرف ثالث، ويتم استخدامها فقط لتطوير الخدمة وتحسينها.
-                </p>
+              <InfoPage title={language === 'ar' ? '🤫 سياسة الخصوصية' : '🤫 Privacy Policy'} gradient="bg-gradient-to-br from-cyan-300/20 via-transparent to-emerald-500/10 dark:from-cyan-200/10 dark:to-emerald-500/25">
+                {language === 'ar' ? (
+                  <>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      نقوم بتخزين بعض البيانات الأساسية مثل البريد الإلكتروني، رصيد العملات
+                      وسجل البرومبتات داخل قاعدة البيانات لتحسين التجربة وحماية حسابك.
+                      لا نقوم ببيع بياناتك لأي طرف ثالث.
+                    </p>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      قد نستخدم بيانات الاستخدام بشكل مجهول لتحليل الأداء وتحسين واجهة الاستخدام.
+                      يمكنك طلب حذف بياناتك من خلال التواصل معنا إذا رغبت في ذلك،
+                      ما لم يكن هناك التزام قانوني بالاحتفاظ ببعض المعلومات.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      We store basic data such as your email address, coin balance,
+                      and prompt history in our database to improve your experience
+                      and secure your account. We do not sell your personal data
+                      to any third party.
+                    </p>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      We may use anonymized usage data to analyze performance and
+                      enhance the user interface. You can request deletion of your data
+                      by contacting us, unless we are legally required to retain
+                      certain information.
+                    </p>
+                  </>
+                )}
               </InfoPage>
             );
           case 'contact':
             return (
-              <InfoPage title="😏 اتصل بنا" gradient="bg-gradient-to-br from-pink-300/20 via-transparent to-indigo-500/10 dark:from-pink-200/10 dark:to-indigo-500/25">
-                <p>
-                    لديك اقتراح، استفسار، أو بلاغ عن مشكلة؟ يسعدنا تواصلك معنا في أي وقت لمساعدتك أو استقبال ملاحظاتك حول Prompt Master.
-                </p>
-                <div className="mt-4 space-y-1 text-sm md:text-base">
-                  <p className="font-semibold text-emerald-500 dark:text-emerald-300">البريد الإلكتروني:</p>
-                  <p className="font-semibold text-white">support@prompt-master.app</p>
-                </div>
+              <InfoPage title={language === 'ar' ? '😏 اتصل بنا' : '😏 Contact Us'} gradient="bg-gradient-to-br from-pink-300/20 via-transparent to-indigo-500/10 dark:from-pink-200/10 dark:to-indigo-500/25">
+                {language === 'ar' ? (
+                  <>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      إذا كان لديك أي اقتراح أو استفسار أو واجهت مشكلة أثناء استخدام Prompt Master،
+                      يسعدنا تواصلك معنا في أي وقت.
+                    </p>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      يمكنك مراسلتنا عبر البريد الإلكتروني التالي:
+                    </p>
+                    <a href="mailto:promptmasteraiv5@gmail.com" className="font-semibold text-emerald-300 underline decoration-dotted hover:text-emerald-200">
+promptmasteraiv5@gmail.com
+</a>
+                    <p className="text-xs text-white/60">
+                      (يمكنك لاحقًا تعديل هذا البريد في الكود ليطابق بريد الدعم الفعلي الخاص بك)
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      If you have any suggestions, questions, or encounter a problem while
+                      using Prompt Master, we would be happy to hear from you.
+                    </p>
+                    <p className="text-sm md:text-base leading-relaxed">
+                      You can contact us via the following email address:
+                    </p>
+                    <a href="mailto:promptmasteraiv5@gmail.com" className="font-semibold text-emerald-300 underline decoration-dotted hover:text-emerald-200">
+promptmasteraiv5@gmail.com
+</a>
+                    <p className="text-xs text-white/60">
+                      (You can later update this email in the code to match your real support address.)
+                    </p>
+                  </>
+                )}
               </InfoPage>
             );
       case 'main':
@@ -345,10 +534,10 @@ export default function PromptV4_1() {
                 <div className="relative overflow-hidden rounded-2xl bg-white/15 dark:bg-black/25 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl p-4">
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/20 dark:from-black/10 dark:to-black/20" />
                     <div className="relative flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white">
-                        <button onClick={() => setPage('about')} className="hover:text-amber-300 transition-colors">من نحن</button>
-                        <button onClick={() => setPage('terms')} className="hover:text-amber-300 transition-colors">شروط الاستخدام</button>
-                        <button onClick={() => setPage('privacy')} className="hover:text-amber-300 transition-colors">سياسة الخصوصية</button>
-                        <button onClick={() => setPage('contact')} className="hover:text-amber-300 transition-colors">اتصل بنا</button>
+                        <button onClick={() => setPage('about')} className="hover:text-amber-300 transition-colors">{footerLabels.about}</button>
+                        <button onClick={() => setPage('terms')} className="hover:text-amber-300 transition-colors">{footerLabels.terms}</button>
+                        <button onClick={() => setPage('privacy')} className="hover:text-amber-300 transition-colors">{footerLabels.privacy}</button>
+                        <button onClick={() => setPage('contact')} className="hover:text-amber-300 transition-colors">{footerLabels.contact}</button>
                     </div>
                 </div>
             </div>
