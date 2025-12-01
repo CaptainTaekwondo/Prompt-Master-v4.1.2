@@ -28,7 +28,18 @@ import { translations } from './translations.ts';
 import type { GeneratedPrompt, ProTier } from './types.ts';
 
 type TranslationKeys = keyof typeof translations['en'];
-type Page = 'main' | 'favorites' | 'history' | 'subscription' | 'report' | 'image_report' | 'video_report' | 'privacy' | 'terms';
+type Page =
+  | 'main'
+  | 'favorites'
+  | 'history'
+  | 'subscription'
+  | 'report'
+  | 'image_report'
+  | 'video_report'
+  | 'privacy'
+  | 'terms'
+  | 'about'
+  | 'contact';
 
 export default function PromptV4_1() {
   const { language, theme, setTheme, toggleLanguage } = useUserSettings();
@@ -200,6 +211,27 @@ export default function PromptV4_1() {
     }, 2000);
   };
 
+  const InfoPage: React.FC<{ title: string; gradient: string; children: React.ReactNode; }> = ({ title, gradient, children }) => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-lg flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div className={`relative w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl bg-white/15 dark:bg-black/25 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-2xl`}>
+            <div className={`pointer-events-none absolute inset-0 ${gradient}`} />
+            <div className="relative p-6 md:p-8 text-right">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                    {title}
+                </h2>
+                <div className="text-sm md:text-base text-white leading-relaxed space-y-4">
+                    {children}
+                </div>
+                <button 
+                    onClick={() => setPage('main')} 
+                    className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+  );
+
   const renderPage = () => {
     switch(page) {
       case 'favorites':
@@ -214,10 +246,42 @@ export default function PromptV4_1() {
         return <PerformanceReport onBack={() => setPage('main')} t={t} mode="image" />;
       case 'video_report':
         return <PerformanceReport onBack={() => setPage('main')} t={t} mode="video" />;
-      case 'privacy':
-        return <PrivacyPolicy />;
-      case 'terms':
-        return <TermsOfUse />;
+        case 'about':
+            return (
+              <InfoPage title="😎 من نحن" gradient="bg-gradient-to-br from-white/20 via-transparent to-purple-500/10 dark:from-white/5 dark:to-purple-500/20">
+                <p>
+                  Prompt Master v4.1 منصة عربية تساعد المبدعين وصنّاع المحتوى على كتابة برومبتات احترافية للذكاء الاصطناعي للنصوص والصور والفيديو، مع واجهة بسيطة وخيارات متقدّمة تناسب الجميع.
+                </p>
+              </InfoPage>
+            );
+          case 'terms':
+            return (
+              <InfoPage title="🥱 شروط الاستخدام" gradient="bg-gradient-to-br from-amber-300/20 via-transparent to-orange-500/10 dark:from-amber-200/10 dark:to-orange-500/25">
+                 <p>
+                    باستخدامك للمنصة فأنت توافق على عدم إساءة استخدام المحتوى الناتج، أو مخالفته للقوانين المحلية أو حقوق الملكية الفكرية. أنت مسؤول عن أي محتوى تقوم بإنشائه أو مشاركته من خلال الخدمة.
+                </p>
+             </InfoPage>
+            );
+          case 'privacy':
+            return (
+              <InfoPage title="🤫 سياسة الخصوصية" gradient="bg-gradient-to-br from-cyan-300/20 via-transparent to-emerald-500/10 dark:from-cyan-200/10 dark:to-emerald-500/25">
+                <p>
+                    نقوم بتخزين بعض البيانات الأساسية مثل البريد الإلكتروني، رصيد العملات وسجل البرومبتات داخل قاعدة البيانات لتحسين التجربة وحماية حسابك. لا نقوم ببيع بياناتك لأي طرف ثالث، ويتم استخدامها فقط لتطوير الخدمة وتحسينها.
+                </p>
+              </InfoPage>
+            );
+          case 'contact':
+            return (
+              <InfoPage title="😏 اتصل بنا" gradient="bg-gradient-to-br from-pink-300/20 via-transparent to-indigo-500/10 dark:from-pink-200/10 dark:to-indigo-500/25">
+                <p>
+                    لديك اقتراح، استفسار، أو بلاغ عن مشكلة؟ يسعدنا تواصلك معنا في أي وقت لمساعدتك أو استقبال ملاحظاتك حول Prompt Master.
+                </p>
+                <div className="mt-4 space-y-1 text-sm md:text-base">
+                  <p className="font-semibold text-emerald-500 dark:text-emerald-300">البريد الإلكتروني:</p>
+                  <p className="font-semibold text-white">support@prompt-master.app</p>
+                </div>
+              </InfoPage>
+            );
       case 'main':
       default:
         return (
@@ -275,14 +339,23 @@ export default function PromptV4_1() {
           DEBUG: plan={currentPlan} | isPremium={String(isPremium)}
         </p>
         <main>{renderPage()}</main>
-        <footer className="text-center text-sm text-white/60 dark:text-white/40 mt-12 pb-4">
-          <div className="flex justify-center gap-4 mb-2">
-            <button onClick={() => setPage('terms')} className="hover:text-white cursor-pointer">{t.termsOfUseLink}</button>
-            <span className="select-none">|</span>
-            <button onClick={() => setPage('privacy')} className="hover:text-white cursor-pointer">{t.privacyPolicyLink}</button>
-          </div>
-          <p>{t.footerDevelopedBy}</p>
-          <p>{t.footerSlogan}</p>
+
+        <footer className="text-center text-sm text-white mt-12 pb-6">
+            <p className="text-lg">👨‍💻</p>
+            <p>{t.footerDevelopedBy}</p>
+            <p className="font-bold">{t.footerSlogan}</p>
+
+            <div className="mt-6 max-w-3xl mx-auto">
+                <div className="relative overflow-hidden rounded-2xl bg-white/15 dark:bg-black/25 backdrop-blur-xl border border-white/30 dark:border-white/10 shadow-xl p-4">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/20 dark:from-black/10 dark:to-black/20" />
+                    <div className="relative flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-white">
+                        <button onClick={() => setPage('about')} className="hover:text-amber-300 transition-colors">من نحن</button>
+                        <button onClick={() => setPage('terms')} className="hover:text-amber-300 transition-colors">شروط الاستخدام</button>
+                        <button onClick={() => setPage('privacy')} className="hover:text-amber-300 transition-colors">سياسة الخصوصية</button>
+                        <button onClick={() => setPage('contact')} className="hover:text-amber-300 transition-colors">اتصل بنا</button>
+                    </div>
+                </div>
+            </div>
         </footer>
       </div>
       {isLaunching && (
